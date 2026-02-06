@@ -1,6 +1,7 @@
+import "./globals.css";
 import type { Metadata } from "next";
 import { Inconsolata, Silkscreen } from "next/font/google";
-import "./globals.css";
+import localFont from "next/font/local";
 import { getConfigs } from "@/lib/config";
 
 const silkscreen = Silkscreen({
@@ -12,6 +13,12 @@ const silkscreen = Silkscreen({
 const inconsolata = Inconsolata({
     variable: "--font-inconsolata",
     subsets: ["latin"],
+});
+
+const whyte = localFont({
+    src: "../assets/ABCWhytePlusVariableEdu-Regular.woff2",
+    fallback: ["system-ui", "sans-serif"],
+    variable: "--font-whyte-plus",
 });
 
 export const generateMetadata = async (): Promise<Metadata> => {
@@ -26,7 +33,7 @@ export default function RootLayout({
     return (
         <html lang="en" className="h-dvh w-dvw">
             <body
-                className={`${inconsolata.variable} ${silkscreen.variable} text-foreground h-dvh w-dvw antialiased`}
+                className={`${inconsolata.variable} ${silkscreen.variable} ${whyte.variable} text-foreground font-inconsolata h-dvh w-dvw antialiased`}
             >
                 {children}
             </body>

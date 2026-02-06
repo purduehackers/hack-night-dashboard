@@ -12,6 +12,7 @@
     },
     "dependencies": {
         "@paper-design/shaders-react": "^0.0.71",
+        "@purduehackers/time": "^0.7.0",
         "@vercel/edge-config": "^1.4.3",
         "next": "16.1.6",
         "react": "19.2.3",

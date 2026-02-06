@@ -1,16 +1,16 @@
 import { DitheredSoup } from "@/components/dash/dithered-soup";
 import { getConfig } from "@/lib/config";
 import { FC } from "react";
+import { LightningClock } from "@/components/dash/clock";
+import { Flag, Glider } from "@/components/icons";
 
 export const Dash: FC = () => (
-    <div className="flex h-full w-full flex-row">
+    <div className="relative flex h-full w-full flex-row">
         <div className="flex grow flex-col">
             <TitleSection />
-            <div className="border-rainbow border p-16">
-                <div className="text-6xl">now o&apos;clock</div>
-            </div>
+            <LightningClock />
         </div>
-        <div className="border-ph-purple border p-16">
+        <div className="border-ph-purple border border-l-0 p-16">
             <div className="text-4xl">live feed</div>
         </div>
     </div>
@@ -19,8 +19,14 @@ export const Dash: FC = () => (
 const TitleSection: FC = async () => {
     const version = await getConfig("version");
     return (
-        <div className="border-ph-purple relative grow border p-32 text-white">
+        <div className="border-ph-purple relative flex grow items-center border border-b-0 px-32 py-16 text-white">
             <DitheredSoup />
+            <div className="text-ph-yellow border-ph-purple absolute top-4 left-4 z-10 border bg-black p-2">
+                <Flag />
+            </div>
+            <div className="text-ph-yellow border-ph-purple absolute top-4 right-4 z-10 border bg-black p-2">
+                <Glider />
+            </div>
             <div className="relative z-10">
                 <h1 className="font-silkscreen text-9xl font-normal">
                     <i>H</i>ack

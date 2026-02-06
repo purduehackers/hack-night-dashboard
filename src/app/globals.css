@@ -8,6 +8,8 @@
 @theme inline {
     --color-background: var(--background);
     --color-foreground: var(--foreground);
+
+    --font-sans: var(--font-whyte-plus);
     --font-silkscreen: var(--font-silkscreen);
     --font-inconsolata: var(--font-inconsolata);
 
