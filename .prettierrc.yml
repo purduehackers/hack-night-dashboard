@@ -1,0 +1,9 @@
+tabWidth: 4
+useTabs: false
+singleQuote: false
+quoteProps: consistent
+semi: true
+trailingComma: all
+arrowParens: always
+plugins:
+    - prettier-plugin-tailwindcss

@@ -1,21 +1,26 @@
 @import "tailwindcss";
 
 :root {
-  --background: #171717;
-  --foreground: #ffffff;
+    --background: #171717;
+    --foreground: #ffffff;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-silkscreen: var(--font-silkscreen);
-  --font-inconsolata: var(--font-inconsolata);
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --font-silkscreen: var(--font-silkscreen);
+    --font-inconsolata: var(--font-inconsolata);
 
-  --color-ph-yellow: #ffee00;
-  --color-ph-purple: #7e3cff;
+    --color-ph-yellow: #ffee00;
+    --color-ph-purple: #7e3cff;
 }
 
 .border-rainbow {
-	border-image-source: linear-gradient(to right in oklch, #FFB700 0.39%, #57FFD5 53.09%, #AA2200 94.85%);
-	border-image-slice: 1;
+    border-image-source: linear-gradient(
+        to right in oklch,
+        #ffb700 0.39%,
+        #57ffd5 53.09%,
+        #aa2200 94.85%
+    );
+    border-image-slice: 1;
 }

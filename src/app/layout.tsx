@@ -4,32 +4,32 @@ import "./globals.css";
 import { getConfigs } from "@/lib/config";
 
 const silkscreen = Silkscreen({
-	weight: ["400", "700"],
-	variable: "--font-silkscreen",
-	subsets: ["latin"],
+    weight: ["400", "700"],
+    variable: "--font-silkscreen",
+    subsets: ["latin"],
 });
 
 const inconsolata = Inconsolata({
-	variable: "--font-inconsolata",
-	subsets: ["latin"],
+    variable: "--font-inconsolata",
+    subsets: ["latin"],
 });
 
 export const generateMetadata = async (): Promise<Metadata> => {
-	return await getConfigs("title");
+    return await getConfigs("title");
 };
 
 export default function RootLayout({
-	children,
+    children,
 }: Readonly<{
-	children: React.ReactNode;
+    children: React.ReactNode;
 }>) {
-	return (
-		<html lang="en" className="w-dvw h-dvh">
-			<body
-				className={`${inconsolata.variable} ${silkscreen.variable} antialiased w-dvw h-dvh text-foreground`}
-			>
-				{children}
-			</body>
-		</html>
-	);
+    return (
+        <html lang="en" className="h-dvh w-dvw">
+            <body
+                className={`${inconsolata.variable} ${silkscreen.variable} text-foreground h-dvh w-dvw antialiased`}
+            >
+                {children}
+            </body>
+        </html>
+    );
 }
