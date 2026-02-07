@@ -14,6 +14,7 @@
     --font-inconsolata: var(--font-inconsolata);
 
     --color-ph-yellow: #ffee00;
+    --color-ph-amber: #fbcb3b;
     --color-ph-purple: #7e3cff;
 }
 
@@ -25,4 +26,31 @@
         #aa2200 94.85%
     );
     border-image-slice: 1;
+}
+
+@keyframes slideRightFromEnd {
+    from {
+        transform: translateX(var(--radix-toast-swipe-end-x));
+    }
+    to {
+        transform: translateX(100%);
+    }
+}
+
+@keyframes slideInFromRight {
+    from {
+        transform: translateX(100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideOutToRight {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(100%);
+    }
 }

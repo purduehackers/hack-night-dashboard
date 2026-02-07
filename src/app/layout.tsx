@@ -2,7 +2,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { Inconsolata, Silkscreen } from "next/font/google";
 import localFont from "next/font/local";
-import { getConfig, getConfigs } from "@/lib/config";
+import { getConfig } from "@/lib/config";
 
 const silkscreen = Silkscreen({
     weight: ["400", "700"],
@@ -38,7 +38,7 @@ export default function RootLayout({
             <body
                 className={`${inconsolata.variable} ${silkscreen.variable} ${whyte.variable} text-foreground font-inconsolata h-dvh w-dvw antialiased`}
             >
-                {children}
+                <div className="size-full bg-black p-8">{children}</div>
             </body>
         </html>
     );

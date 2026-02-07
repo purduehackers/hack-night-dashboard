@@ -6,6 +6,7 @@ import { get } from "@vercel/edge-config";
 const defaults = {
     title: "Hack Night Dashboard",
     version: "v0.00",
+    maintainer: "an Organizer",
 } as const satisfies Readonly<Record<string, string>>;
 
 export type ConfigKey = keyof typeof defaults;
