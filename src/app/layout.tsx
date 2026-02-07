@@ -2,7 +2,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { Inconsolata, Silkscreen } from "next/font/google";
 import localFont from "next/font/local";
-import { getConfigs } from "@/lib/config";
+import { getConfig, getConfigs } from "@/lib/config";
 
 const silkscreen = Silkscreen({
     weight: ["400", "700"],
@@ -16,13 +16,16 @@ const inconsolata = Inconsolata({
 });
 
 const whyte = localFont({
-    src: "../assets/ABCWhytePlusVariableEdu-Regular.woff2",
+    src: "../fonts/ABCWhytePlusVariableEdu-Regular.woff2",
     fallback: ["system-ui", "sans-serif"],
     variable: "--font-whyte-plus",
 });
 
 export const generateMetadata = async (): Promise<Metadata> => {
-    return await getConfigs("title");
+    return {
+        title: await getConfig("title"),
+        icons: "/glider.svg",
+    };
 };
 
 export default function RootLayout({
