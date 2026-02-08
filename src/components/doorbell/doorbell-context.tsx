@@ -10,6 +10,7 @@ import {
     useState,
 } from "react";
 import ReconnectingWebSocket from "reconnecting-websocket";
+import { z } from "zod";
 
 export enum ConnectionState {
     Connecting,
@@ -22,6 +23,12 @@ interface DoorbellContextInterface {
     connectionState: ConnectionState;
     setDoorbellState: (status: boolean) => void;
 }
+
+const messageSchema = z.object({
+    type: z.enum(["set", "status"]),
+    ringing: z.boolean(),
+});
+type Message = z.infer<typeof messageSchema>;
 
 const DoorbellContext = createContext<DoorbellContextInterface | undefined>(
     undefined,
@@ -48,28 +55,24 @@ export const DoorbellProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
         ws.current.onerror = () => {
             setConnectionState(ConnectionState.Error);
         };
+        ws.current.onmessage = (e) => {
+            const json = JSON.parse(String(e.data));
+            const message = messageSchema.parse(json);
+            setDoorbellStateInternal(message.ringing);
+        };
 
         return () => {
             ws.current?.close();
         };
     }, []);
 
-    useEffect(() => {
-        if (!ws.current) return;
-
-        ws.current.onmessage = (e) => {
-            const newState = e.data == "true";
-
-            if (doorbellState != newState) setDoorbellStateInternal(newState);
-        };
-    }, [doorbellState]);
-
     const setDoorbellState = (state: boolean) => {
         setDoorbellStateInternal(state);
 
         if (!ws.current) return;
 
-        ws.current.send(state ? "true" : "false");
+        const message: Message = { type: "set", ringing: state };
+        ws.current.send(JSON.stringify(message));
     };
 
     return (
