@@ -12,8 +12,9 @@ export const Dash: FC = () => (
             <TitleSection />
             <LightningClock />
         </div>
-        <div className="border-ph-purple border border-l-0 p-16">
-            <div className="text-4xl">live feed</div>
+        <div className="border-ph-purple relative w-[20dvw] border border-l-0 p-16">
+            {/* Live feed placeholder panel */}
+            <DitheredSoup fgColor="#fbcb3b" />
         </div>
     </div>
 );
