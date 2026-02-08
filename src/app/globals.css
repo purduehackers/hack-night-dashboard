@@ -14,7 +14,7 @@
     --font-inconsolata: var(--font-inconsolata);
 
     --color-ph-yellow: #ffee00;
-    --color-ph-amber: #fbcb3b;
+    --color-ph-amber: rgb(253, 211, 74);
     --color-ph-purple: #7e3cff;
 }
 

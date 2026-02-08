@@ -24,7 +24,7 @@ const whyte = localFont({
 export const generateMetadata = async (): Promise<Metadata> => {
     return {
         title: await getConfig("title"),
-        icons: "/glider.svg",
+        icons: "/glider-flat.svg",
     };
 };
 

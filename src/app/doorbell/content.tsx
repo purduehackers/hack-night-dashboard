@@ -31,7 +31,7 @@ export default function DoorbellPageContent({ maintainer }: Props) {
         <div className="border-ph-purple relative size-full border">
             <DitheredSoup />
             <div className="relative z-10 flex h-full flex-col items-center justify-center gap-16 p-4 sm:p-16 md:justify-evenly">
-                <h1 className="font-silkscreen text-center text-5xl sm:text-8xl">
+                <h1 className="font-silkscreen text-center text-5xl drop-shadow-lg drop-shadow-black sm:text-8xl">
                     {title}
                 </h1>
                 {isError ? (

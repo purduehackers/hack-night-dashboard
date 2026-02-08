@@ -18,11 +18,11 @@ export const DoorbellButton: FC = () => {
     return (
         <button
             className={cn(
-                "border-ph-yellow block aspect-square cursor-pointer border p-8 text-9xl transition-colors duration-200 ease-out disabled:cursor-not-allowed sm:p-12 sm:text-[15rem]",
+                "border-ph-yellow block aspect-square cursor-pointer border p-8 text-9xl drop-shadow-lg drop-shadow-black transition-colors duration-200 ease-out disabled:cursor-not-allowed sm:p-12 sm:text-[15rem]",
                 ringing
                     ? "bg-ph-amber"
                     : "bg-black hover:bg-[color-mix(in_oklch,var(--color-amber-200)_30%,black_70%)]",
-                !ringing && "disabled:opacity-50",
+                !ringing && "disabled:opacity-50 disabled:drop-shadow-none",
             )}
             onClick={() => {
                 console.log("click");
