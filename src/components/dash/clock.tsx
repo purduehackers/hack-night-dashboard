@@ -5,15 +5,19 @@ import { useLightningTimeClock } from "@purduehackers/time/react";
 import { useWindowSize } from "react-use";
 import ReactConfetti from "react-confetti";
 import { LightningTime } from "@purduehackers/time";
+import { Overlay } from "@/components/ui/overlay";
+import { createPortal } from "react-dom";
 
 enum State {
     Default,
+    Announcing,
     CountingDown,
     Confetti,
 }
 
 const CONFETTI_DURATION_SECONDS = 10;
 
+const announcementStartTime = "f~f~d|2";
 const countdownStartTime = "f~f~e|b";
 const midnight = "0~0~0|0";
 // Calculate the stop time as the confetti duration plus 5 seconds to allow all
@@ -32,6 +36,8 @@ export const LightningClock: FC = () => {
     let state: State;
     if (lightningString >= countdownStartTime) {
         state = State.CountingDown;
+    } else if (lightningString >= announcementStartTime) {
+        state = State.Announcing;
     } else if (lightningString < confettiStopTime) {
         state = State.Confetti;
     } else {
@@ -48,6 +54,7 @@ export const LightningClock: FC = () => {
                     ({formattedNormalTime})
                 </div>
             </div>
+            <Announcement open={state === State.Announcing} />
             {state === State.Confetti && <Confetti />}
         </>
     );
@@ -64,8 +71,8 @@ function easeOutQuad(t: number, b: number, _c: number, d: number) {
 
 const Confetti: FC = () => {
     const { width, height } = useWindowSize();
-    return (
-        <div className="fixed inset-0">
+    const element = (
+        <div className="fixed inset-0 z-50">
             <ReactConfetti
                 width={width}
                 height={height}
@@ -75,5 +82,29 @@ const Confetti: FC = () => {
                 tweenFunction={easeOutQuad}
             />
         </div>
+    );
+    return typeof document !== "undefined"
+        ? createPortal(element, document.body)
+        : element;
+};
+
+const Announcement: FC<{ open: boolean }> = ({ open }) => {
+    const { lightningString, formattedNormalTime } = useLightningTimeClock();
+
+    return (
+        // #fb2c36 = red-500
+        <Overlay open={open} color="#fb2c36">
+            <div className="text-foreground relative flex size-full h-full flex-col items-center justify-evenly px-16 py-8 text-center">
+                <h1 className="font-silkscreen text-9xl leading-tight tracking-tighter drop-shadow-lg drop-shadow-black">
+                    Countdown time!
+                </h1>
+                <div className="font-bold drop-shadow-sm drop-shadow-black">
+                    <span className="text-4xl">{lightningString}</span>
+                    <span className="ms-8 text-2xl">
+                        ({formattedNormalTime})
+                    </span>
+                </div>
+            </div>
+        </Overlay>
     );
 };

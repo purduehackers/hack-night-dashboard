@@ -1,5 +1,5 @@
 import { type FC, useEffect, useState } from "react";
-import { ToastNotification } from "../ui/toast-notification";
+import { ToastNotification } from "@/components/ui/toast-notification";
 
 interface Props {
     isOpen: boolean;

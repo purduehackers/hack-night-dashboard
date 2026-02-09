@@ -5,7 +5,7 @@ import { DoorbellProvider } from "@/components/doorbell/doorbell-context";
 import { DoorbellNotifier } from "@/components/doorbell/doorbell-notifier";
 import { NotificationProvider } from "@/components/ui/notification-provider";
 import { ActivateNotification } from "./activate-notification";
-import { DitheredSoup } from "./dithered-soup";
+import { DitheredSoup } from "@/components/dithered-soup";
 import { LightningClock } from "./clock";
 
 const { version, maintainer } = await getConfigs("version", "maintainer");

@@ -1,6 +1,6 @@
 "use client";
 
-import { DitheredSoup } from "@/components/dash/dithered-soup";
+import { DitheredSoup } from "@/components/dithered-soup";
 import { DoorbellButton } from "@/components/doorbell/doorbell-button";
 import {
     ConnectionState,
