@@ -1,7 +1,6 @@
 "use client";
 
 import { FC, ReactNode, useEffect, useState } from "react";
-import * as Toast from "@radix-ui/react-toast";
 import {
     useDoorbell,
     ConnectionState,
@@ -85,8 +84,9 @@ export const DoorbellNotifier: FC<DoorbellNotifierProps> = ({ maintainer }) => {
     }
 
     return (
-        <Toast.Provider swipeDirection="right" duration={0}>
+        <>
             <ToastNotification
+                key="doorbell-connection-state"
                 open={notificationVisible}
                 onOpenChange={setNotificationVisible}
                 type="background"
@@ -100,7 +100,6 @@ export const DoorbellNotifier: FC<DoorbellNotifierProps> = ({ maintainer }) => {
                 initialSecondsLeft={DEBOUNCE_SECONDS}
                 onClose={dismissDoorbell}
             />
-            <Toast.Viewport className="pointer-events-none fixed inset-0 z-50 flex flex-col items-end gap-4 overflow-clip p-4" />
-        </Toast.Provider>
+        </>
     );
 };

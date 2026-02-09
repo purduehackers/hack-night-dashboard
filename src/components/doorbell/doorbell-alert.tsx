@@ -47,6 +47,7 @@ export const DoorbellAlert: FC<Props> = ({
 
     return (
         <ToastNotification
+            key="doorbell-alert"
             title="Ding dong!"
             icon="🔔"
             open={isOpen}
