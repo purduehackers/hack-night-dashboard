@@ -2,7 +2,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { Inconsolata, Silkscreen } from "next/font/google";
 import localFont from "next/font/local";
-import { getConfig } from "@/lib/config";
+import { getConfig, getConfigs } from "@/lib/config";
 
 const silkscreen = Silkscreen({
     weight: ["400", "700"],
@@ -22,9 +22,33 @@ const whyte = localFont({
 });
 
 export const generateMetadata = async (): Promise<Metadata> => {
+    const { title, description } = await getConfigs("title", "description");
+    const image = {
+        url: "https://night.purduehackers.com/opengraph.png",
+        type: "image/png",
+        width: 2220,
+        height: 1096,
+        alt: "Logo & title section of Hack Night dashboard",
+    };
     return {
-        title: await getConfig("title"),
+        title,
+        description,
         icons: "/glider-flat.svg",
+        openGraph: {
+            type: "website",
+            url: "https://night.purduehackers.com",
+            title,
+            description,
+            siteName: "Purdue Hackers",
+            images: image,
+        },
+        twitter: {
+            card: "summary_large_image",
+            title,
+            description,
+            creator: "@purduehackers",
+            images: image,
+        },
     };
 };
 

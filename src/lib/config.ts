@@ -7,6 +7,7 @@ const defaults = {
     title: "Hack Night Dashboard",
     version: "v0.00",
     maintainer: "an Organizer",
+    description: "A dashboard for Hack Night, Purdue Hackers' weekly meet-up",
 } as const satisfies Readonly<Record<string, string>>;
 
 export type ConfigKey = keyof typeof defaults;
