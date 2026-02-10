@@ -11,6 +11,7 @@ import {
 } from "react";
 import ReconnectingWebSocket from "reconnecting-websocket";
 import { z } from "zod";
+import * as Sentry from "@sentry/nextjs";
 
 export enum ConnectionState {
     Connecting,
@@ -41,24 +42,52 @@ export const DoorbellProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
         ConnectionState.Connecting,
     );
 
+    const WS_URL = "wss://api.purduehackers.com/doorbell";
     const ws = useRef<ReconnectingWebSocket | null>(null);
 
     useEffect(() => {
-        ws.current = new ReconnectingWebSocket(
-            "wss://api.purduehackers.com/doorbell",
-        );
+        // Create websocket and attach lightweight Sentry instrumentation:
+        // - breadcrumbs for lifecycle events
+        // - spans for handling messages
+        // - scoped tags/extras when capturing exceptions
+        ws.current = new ReconnectingWebSocket(WS_URL);
 
-        ws.current.onopen = () => setConnectionState(ConnectionState.Connected);
+        ws.current.onopen = () => {
+            Sentry.addBreadcrumb({
+                category: "doorbell.websocket",
+                message: "WebSocket opened",
+                data: { url: WS_URL },
+            });
+            setConnectionState(ConnectionState.Connected);
+        };
+
         ws.current.onclose = () => {
+            Sentry.addBreadcrumb({
+                category: "doorbell.websocket",
+                message: "WebSocket closed",
+                data: { url: WS_URL },
+            });
             setConnectionState(ConnectionState.Connecting);
         };
-        ws.current.onerror = () => {
+
+        ws.current.onerror = (error) => {
+            Sentry.captureException(error, {
+                tags: { url: WS_URL },
+            });
             setConnectionState(ConnectionState.Error);
         };
+
         ws.current.onmessage = (e) => {
-            const json = JSON.parse(String(e.data));
-            const message = messageSchema.parse(json);
-            setDoorbellStateInternal(message.ringing);
+            try {
+                const json = JSON.parse(String(e.data));
+                const message = messageSchema.parse(json);
+                setDoorbellStateInternal(message.ringing);
+            } catch (error) {
+                Sentry.captureException(error, {
+                    tags: { url: WS_URL },
+                    extra: { message: e.data },
+                });
+            }
         };
 
         return () => {
@@ -72,7 +101,14 @@ export const DoorbellProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
         if (!ws.current) return;
 
         const message: Message = { type: "set", ringing: state };
-        ws.current.send(JSON.stringify(message));
+        try {
+            ws.current.send(JSON.stringify(message));
+        } catch (error) {
+            Sentry.captureException(error, {
+                tags: { url: WS_URL },
+                extra: { message },
+            });
+        }
     };
 
     return (
