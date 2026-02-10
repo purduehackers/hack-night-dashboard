@@ -7,26 +7,29 @@ import { NotificationProvider } from "@/components/ui/notification-provider";
 import { ActivateNotification } from "./activate-notification";
 import { DitheredSoup } from "@/components/dithered-soup";
 import { LightningClock } from "./clock";
+import { Coordinator } from "./coordinator";
 
 const { version, maintainer } = await getConfigs("version", "maintainer");
 
 export const Dash: FC = () => (
-    <NotificationProvider>
-        <ActivateNotification />
-        <DoorbellProvider>
-            <DoorbellNotifier maintainer={maintainer} />
-            <div className="relative flex h-full w-full flex-row">
-                <div className="flex grow flex-col">
-                    <TitleSection />
-                    <LightningClock />
+    <Coordinator>
+        <NotificationProvider>
+            <ActivateNotification />
+            <DoorbellProvider>
+                <DoorbellNotifier maintainer={maintainer} />
+                <div className="relative flex h-full w-full flex-row">
+                    <div className="flex grow flex-col">
+                        <TitleSection />
+                        <LightningClock />
+                    </div>
+                    <div className="border-ph-purple relative w-[20dvw] border border-l-0 p-16">
+                        {/* Live feed placeholder panel */}
+                        <DitheredSoup fgColor="#fe0" />
+                    </div>
                 </div>
-                <div className="border-ph-purple relative w-[20dvw] border border-l-0 p-16">
-                    {/* Live feed placeholder panel */}
-                    <DitheredSoup fgColor="#fe0" />
-                </div>
-            </div>
-        </DoorbellProvider>
-    </NotificationProvider>
+            </DoorbellProvider>
+        </NotificationProvider>
+    </Coordinator>
 );
 
 const TitleSection: FC = async () => {

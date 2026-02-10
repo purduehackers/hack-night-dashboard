@@ -2,7 +2,7 @@
 
 import { FC, useState } from "react";
 import { ToastNotification } from "@/components/ui/toast-notification";
-import { MousePointerIcon, PowerIcon } from "lucide-react";
+import { PowerIcon } from "lucide-react";
 
 export const ActivateNotification: FC = () => {
     const [isOpen, setIsOpen] = useState(true);

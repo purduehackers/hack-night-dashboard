@@ -1,6 +1,7 @@
 import { ComponentPropsWithoutRef, FC, ReactNode } from "react";
 import * as Toast from "@radix-ui/react-toast";
 import { cn } from "@/lib/utils";
+import { useCoordinator } from "@/components/dash/coordinator";
 
 const defaultClasses = [
     "border-ph-yellow bg-background text-foreground border p-4 w-sm pointer-events-auto shadow-lg shadow-black",
@@ -25,10 +26,16 @@ export const ToastNotification: FC<Props> = ({
     description,
     icon,
     className,
+    open,
     ...props
 }) => {
+    const { notificationsPaused } = useCoordinator();
     return (
-        <Toast.Root {...props} className={cn(...defaultClasses, className)}>
+        <Toast.Root
+            {...props}
+            open={open && !notificationsPaused}
+            className={cn(...defaultClasses, className)}
+        >
             <div className="mb-2 flex flex-row items-start justify-between gap-8">
                 <Toast.Title className="font-bold">
                     {icon && <span className="me-2">{icon}</span>}

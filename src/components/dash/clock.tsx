@@ -1,6 +1,6 @@
 "use client";
 
-import { FC } from "react";
+import { FC, useEffect } from "react";
 import { useLightningTimeClock } from "@purduehackers/time/react";
 import { useWindowSize } from "react-use";
 import ReactConfetti from "react-confetti";
@@ -9,6 +9,7 @@ import { Overlay } from "@/components/ui/overlay";
 import { createPortal } from "react-dom";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
+import { useCoordinator } from "@/components/dash/coordinator";
 
 const CONFETTI_DURATION_SECONDS = 10;
 
@@ -27,6 +28,7 @@ const confettiStopTime = ((): string => {
 
 export const LightningClock: FC = () => {
     const { lightningString, formattedNormalTime } = useLightningTimeClock();
+    const { pauseNotifications, unpauseNotifications } = useCoordinator();
 
     // Lightning time is lexicographically ordered, so string comparisons work
 
@@ -40,6 +42,16 @@ export const LightningClock: FC = () => {
         lightningString < countdownStartTime;
 
     const isConfetti = lightningString < confettiStopTime;
+
+    // Pause notifications when entering countdown, and unpause when exiting.
+    // Runs on mount as well, so mounting during countdown applies the pause.
+    useEffect(() => {
+        if (isCountdown) {
+            pauseNotifications();
+        } else {
+            unpauseNotifications();
+        }
+    }, [isCountdown, pauseNotifications, unpauseNotifications]);
 
     return (
         <>
@@ -79,7 +91,7 @@ function easeOutQuad(t: number, b: number, _c: number, d: number) {
 const Confetti: FC = () => {
     const { width, height } = useWindowSize();
     const element = (
-        <div className="fixed inset-0 z-50">
+        <div className="pointer-events-none fixed inset-0 z-50">
             <ReactConfetti
                 width={width}
                 height={height}
