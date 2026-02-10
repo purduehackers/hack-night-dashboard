@@ -13,6 +13,7 @@ const animations = {
         initial: { opacity: 0 },
         animate: { opacity: 1 },
         exit: { opacity: 0 },
+        transition: { duration: 1 },
     },
 } as const satisfies Readonly<Record<string, HTMLMotionProps<"div">>>;
 type Animation = keyof typeof animations;

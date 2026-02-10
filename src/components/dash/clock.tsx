@@ -7,19 +7,15 @@ import ReactConfetti from "react-confetti";
 import { LightningTime } from "@purduehackers/time";
 import { Overlay } from "@/components/ui/overlay";
 import { createPortal } from "react-dom";
-
-enum State {
-    Default,
-    Announcing,
-    CountingDown,
-    Confetti,
-}
+import { motion } from "motion/react";
+import { cn } from "@/lib/utils";
 
 const CONFETTI_DURATION_SECONDS = 10;
 
-const announcementStartTime = "f~f~d|2";
+const announcementStartTime = "f~f~d|1";
 const countdownStartTime = "f~f~e|b";
 const midnight = "0~0~0|0";
+const countdownEndTime = "0~0~0|2";
 // Calculate the stop time as the confetti duration plus 5 seconds to allow all
 // of it to fall off the screen.
 const confettiStopTime = ((): string => {
@@ -33,29 +29,40 @@ export const LightningClock: FC = () => {
     const { lightningString, formattedNormalTime } = useLightningTimeClock();
 
     // Lightning time is lexicographically ordered, so string comparisons work
-    let state: State;
-    if (lightningString >= countdownStartTime) {
-        state = State.CountingDown;
-    } else if (lightningString >= announcementStartTime) {
-        state = State.Announcing;
-    } else if (lightningString < confettiStopTime) {
-        state = State.Confetti;
-    } else {
-        state = State.Default;
-    }
+
+    // Yes, OR is correct here, not AND, since the time wraps around
+    const isCountdown =
+        lightningString > countdownStartTime ||
+        lightningString < countdownEndTime;
+
+    const isAnnouncing =
+        lightningString >= announcementStartTime &&
+        lightningString < countdownStartTime;
+
+    const isConfetti = lightningString < confettiStopTime;
 
     return (
         <>
-            <div className="border-rainbow flex items-end justify-between gap-16 border p-16">
+            <motion.div
+                layout
+                animate={{ transition: { duration: 2 } }}
+                className={cn(
+                    "border-rainbow flex gap-16 border bg-black p-16",
+                    isCountdown
+                        ? "flex-col items-center justify-center *:scale-150"
+                        : "flex-row items-end justify-between",
+                    isCountdown && "fixed inset-8 z-40",
+                )}
+            >
                 <div className="text-ph-yellow font-sans text-8xl font-black whitespace-nowrap italic">
                     {lightningString}
                 </div>
                 <div className="text-3xl font-bold">
                     ({formattedNormalTime})
                 </div>
-            </div>
-            <Announcement open={state === State.Announcing} />
-            {state === State.Confetti && <Confetti />}
+            </motion.div>
+            <Announcement open={isAnnouncing} />
+            {isConfetti && <Confetti />}
         </>
     );
 };
