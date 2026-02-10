@@ -1,5 +1,5 @@
 import { type FC, useEffect, useState } from "react";
-import { ToastNotification } from "@/components/ui/toast-notification";
+import { PopupDialog } from "../ui/popup-dialog";
 
 interface Props {
     isOpen: boolean;
@@ -46,16 +46,13 @@ export const DoorbellAlert: FC<Props> = ({
     }, [isOpen, secondsLeft, onClose, initialSecondsLeft]);
 
     return (
-        <ToastNotification
-            key="doorbell-alert"
-            title="Ding dong!"
-            icon="🔔"
+        <PopupDialog
             open={isOpen}
-            duration={0}
-            onOpenChange={(newOpen) => {
-                if (!newOpen) onClose();
-            }}
-            description={`Someone is at the door    (${secondsLeft} s)`}
-        />
+            onClose={onClose}
+            title={<span>🔔 Ding dong!</span>}
+            action={<span>Ok ({secondsLeft} s)</span>}
+        >
+            <p>Someone is at the door!</p>
+        </PopupDialog>
     );
 };
