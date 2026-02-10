@@ -3,7 +3,7 @@ import * as Toast from "@radix-ui/react-toast";
 import { cn } from "@/lib/utils";
 
 const defaultClasses = [
-    "border-ph-yellow bg-background text-foreground border p-4 w-sm pointer-events-auto",
+    "border-ph-yellow bg-background text-foreground border p-4 w-sm pointer-events-auto shadow-lg shadow-black",
     "data-[state=closed]:animate-[slideOutToRight_200ms_ease-in]",
     "data-[state=open]:animate-[slideInFromRight_200ms_ease-out] ",
     "data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)]",

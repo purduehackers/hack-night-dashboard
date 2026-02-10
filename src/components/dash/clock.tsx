@@ -47,7 +47,7 @@ export const LightningClock: FC = () => {
     return (
         <>
             <div className="border-rainbow flex items-end justify-between gap-16 border p-16">
-                <div className="text-ph-yellow drop-shadow-ph-yellow font-sans text-8xl font-black whitespace-nowrap italic drop-shadow-sm">
+                <div className="text-ph-yellow font-sans text-8xl font-black whitespace-nowrap italic">
                     {lightningString}
                 </div>
                 <div className="text-3xl font-bold">
