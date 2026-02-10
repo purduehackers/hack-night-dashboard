@@ -18,16 +18,6 @@
     --color-ph-purple: #7e3cff;
 }
 
-.border-rainbow {
-    border-image-source: linear-gradient(
-        to right in oklch,
-        #ffb700 0.39%,
-        #57ffd5 53.09%,
-        #aa2200 94.85%
-    );
-    border-image-slice: 1;
-}
-
 @keyframes slideRightFromEnd {
     from {
         transform: translateX(var(--radix-toast-swipe-end-x));

@@ -27,7 +27,8 @@ const confettiStopTime = ((): string => {
 })();
 
 export const LightningClock: FC = () => {
-    const { lightningString, formattedNormalTime } = useLightningTimeClock();
+    const { lightningString, formattedNormalTime, colors } =
+        useLightningTimeClock();
     const { pauseNotifications, unpauseNotifications } = useCoordinator();
 
     // Lightning time is lexicographically ordered, so string comparisons work
@@ -59,12 +60,16 @@ export const LightningClock: FC = () => {
                 layout
                 animate={{ transition: { duration: 2 } }}
                 className={cn(
-                    "border-rainbow flex gap-16 border bg-black p-16",
+                    "flex gap-16 border bg-black p-16",
                     isCountdown
-                        ? "flex-col items-center justify-center *:scale-150"
-                        : "flex-row items-end justify-between",
+                        ? "flex-col items-center justify-center border-5 *:scale-150"
+                        : "flex-row items-end justify-between border",
                     isCountdown && "fixed inset-8 z-40",
                 )}
+                style={{
+                    borderImageSource: `linear-gradient(120deg in oklch, ${colors.boltColor}, ${colors.zapColor}, ${colors.sparkColor})`,
+                    borderImageSlice: 1,
+                }}
             >
                 <div className="text-ph-yellow font-sans text-8xl font-black whitespace-nowrap italic">
                     {lightningString}
