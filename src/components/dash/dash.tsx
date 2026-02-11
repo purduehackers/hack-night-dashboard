@@ -8,6 +8,7 @@ import { ActivatePopup } from "./activate-popup";
 import { DitheredSoup } from "@/components/dithered-soup";
 import { LightningClock } from "./clock";
 import { Coordinator } from "./coordinator";
+import { SessionAnnouncer } from "../sessions";
 
 const { version, maintainer } = await getConfigs("version", "maintainer");
 
@@ -15,6 +16,7 @@ export const Dash: FC = () => (
     <Coordinator>
         <NotificationProvider>
             <ActivatePopup />
+            <SessionAnnouncer />
             <DoorbellProvider>
                 <DoorbellNotifier maintainer={maintainer} />
                 <div className="relative flex h-full w-full flex-row">
