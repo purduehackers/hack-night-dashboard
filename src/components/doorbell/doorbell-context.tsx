@@ -71,7 +71,7 @@ export const DoorbellProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
         };
 
         ws.current.onerror = (error) => {
-            Sentry.captureException(error, {
+            Sentry.captureException(error.error, {
                 tags: { url: WS_URL },
             });
             setConnectionState(ConnectionState.Error);
