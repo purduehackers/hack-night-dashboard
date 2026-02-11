@@ -1,14 +1,13 @@
 "use client";
 
 import { FC, useEffect } from "react";
-import { useLightningTimeClock } from "@purduehackers/time/react";
 import { useWindowSize } from "react-use";
 import ReactConfetti from "react-confetti";
+import { useLightningTimeClock } from "@purduehackers/time/react";
 import { LightningTime } from "@purduehackers/time";
 import { Overlay } from "@/components/ui/overlay";
 import { createPortal } from "react-dom";
 import { motion } from "motion/react";
-import { cn } from "@/lib/utils";
 import { useCoordinator } from "@/components/dash/coordinator";
 
 const CONFETTI_DURATION_SECONDS = 10;
@@ -26,6 +25,11 @@ const confettiStopTime = ((): string => {
     return lt.convertToLightning(date).lightningString;
 })();
 
+type LightningTimeColors = ReturnType<typeof useLightningTimeClock>["colors"];
+function lightningColorGradient(colors: LightningTimeColors): string {
+    return `linear-gradient(120deg in oklch, ${colors.boltColor}, ${colors.zapColor}, ${colors.sparkColor})`;
+}
+
 export const LightningClock: FC = () => {
     const { lightningString, formattedNormalTime, colors } =
         useLightningTimeClock();
@@ -35,7 +39,7 @@ export const LightningClock: FC = () => {
 
     // Yes, OR is correct here, not AND, since the time wraps around
     const isCountdown =
-        lightningString > countdownStartTime ||
+        lightningString >= countdownStartTime ||
         lightningString < countdownEndTime;
 
     const isAnnouncing =
@@ -59,15 +63,9 @@ export const LightningClock: FC = () => {
             <motion.div
                 layout
                 animate={{ transition: { duration: 2 } }}
-                className={cn(
-                    "flex gap-16 border bg-black p-16",
-                    isCountdown
-                        ? "flex-col items-center justify-center border-5 *:scale-150"
-                        : "flex-row items-end justify-between border",
-                    isCountdown && "fixed inset-8 z-40",
-                )}
+                className="flex flex-row items-end justify-between gap-16 border bg-black p-16"
                 style={{
-                    borderImageSource: `linear-gradient(120deg in oklch, ${colors.boltColor}, ${colors.zapColor}, ${colors.sparkColor})`,
+                    borderImageSource: lightningColorGradient(colors),
                     borderImageSlice: 1,
                 }}
             >
@@ -79,6 +77,7 @@ export const LightningClock: FC = () => {
                 </div>
             </motion.div>
             <Announcement open={isAnnouncing} />
+            <CountdownClock open={isCountdown} />
             {isConfetti && <Confetti />}
         </>
     );
@@ -103,6 +102,7 @@ const Confetti: FC = () => {
                 recycle={false} // Stop once all pieces are dropped
                 numberOfPieces={60 * CONFETTI_DURATION_SECONDS}
                 tweenDuration={CONFETTI_DURATION_SECONDS * 1000} // Time over which to drop confetti
+                // Use easeOut so confetti starts strong then gradually fades away
                 tweenFunction={easeOutQuad}
             />
         </div>
@@ -127,6 +127,30 @@ const Announcement: FC<{ open: boolean }> = ({ open }) => {
                     <span className="ms-8 text-2xl">
                         ({formattedNormalTime})
                     </span>
+                </div>
+            </div>
+        </Overlay>
+    );
+};
+
+const CountdownClock: FC<{ open: boolean }> = ({ open }) => {
+    const { lightningString, formattedNormalTime, colors } =
+        useLightningTimeClock();
+    return (
+        <Overlay open={open}>
+            <div className="relative flex size-full items-center justify-center">
+                <div
+                    className="border-5 bg-black p-32 text-center"
+                    style={{
+                        borderImageSource: lightningColorGradient(colors),
+                        borderImageSlice: 1,
+                    }}
+                >
+                    <div className="text-ph-yellow grid grid-cols-1 font-sans text-9xl font-black italic">
+                        <div className="invisible [grid-area:1/1]">0~0~0|0</div>
+                        <div className="[grid-area:1/1]">{lightningString}</div>
+                    </div>
+                    <div className="mt-8 text-4xl">({formattedNormalTime})</div>
                 </div>
             </div>
         </Overlay>
