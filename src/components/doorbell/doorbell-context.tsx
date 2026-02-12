@@ -25,10 +25,15 @@ interface DoorbellContextInterface {
     setDoorbellState: (status: boolean) => void;
 }
 
-const messageSchema = z.object({
-    type: z.enum(["set", "status"]),
-    ringing: z.boolean(),
-});
+const messageSchema = z.discriminatedUnion("type", [
+    z.object({
+        type: z.enum(["set", "status"]),
+        ringing: z.boolean(),
+    }),
+    z.object({
+        type: z.enum(["ping", "pong"]),
+    }),
+]);
 type Message = z.infer<typeof messageSchema>;
 
 const DoorbellContext = createContext<DoorbellContextInterface | undefined>(
@@ -61,11 +66,18 @@ export const DoorbellProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
             setConnectionState(ConnectionState.Connected);
         };
 
-        ws.current.onclose = () => {
+        ws.current.onclose = (ev) => {
             Sentry.addBreadcrumb({
                 category: "doorbell.websocket",
                 message: "WebSocket closed",
-                data: { url: WS_URL },
+                data: {
+                    url: WS_URL,
+                    info: {
+                        code: ev.code,
+                        reason: ev.reason,
+                        wasClean: ev.wasClean,
+                    },
+                },
             });
             setConnectionState(ConnectionState.Connecting);
         };
@@ -81,7 +93,9 @@ export const DoorbellProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
             try {
                 const json = JSON.parse(String(e.data));
                 const message = messageSchema.parse(json);
-                setDoorbellStateInternal(message.ringing);
+                if (message.type === "status") {
+                    setDoorbellStateInternal(message.ringing);
+                }
             } catch (error) {
                 Sentry.captureException(error, {
                     tags: { url: WS_URL },
@@ -90,8 +104,16 @@ export const DoorbellProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
             }
         };
 
+        // Periodically send pings to prevent timeouts
+        const timer = window.setInterval(() => {
+            ws.current?.send(
+                JSON.stringify({ type: "ping" } satisfies Message),
+            );
+        }, 20000 /* 20 seconds */);
+
         return () => {
             ws.current?.close();
+            window.clearInterval(timer);
         };
     }, []);
 
