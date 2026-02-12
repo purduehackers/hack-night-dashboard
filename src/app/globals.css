@@ -9,13 +9,25 @@
     --color-background: var(--background);
     --color-foreground: var(--foreground);
 
-    --font-sans: var(--font-whyte-plus);
+    --font-whyte: var(--font-whyte);
+    --font-polysans: var(--font-polysans);
     --font-silkscreen: var(--font-silkscreen);
     --font-inconsolata: var(--font-inconsolata);
+}
 
+@theme {
     --color-ph-yellow: #ffee00;
     --color-ph-amber: rgb(253, 211, 74);
     --color-ph-purple: #7e3cff;
+
+    /* I stole these from inspector and changed the color-mix() to composite
+       with the proper background color */
+    --color-discord-mention-fg: hsl(227.442 100% 83.137%);
+    --color-discord-mention-bg: color-mix(
+        in oklab,
+        hsl(234.935 85.556% 64.706%) 23.921568627450981%,
+        hsl(240 5.263% 7.451%)
+    );
 }
 
 @keyframes slideRightFromEnd {

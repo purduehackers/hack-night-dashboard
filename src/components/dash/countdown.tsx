@@ -124,7 +124,7 @@ const CountdownClock: FC<{ open: boolean }> = ({ open }) => {
                     }}
                     lightningTimeProps={{
                         className:
-                            "text-ph-yellow font-sans text-9xl font-black italic",
+                            "text-ph-yellow font-whyte text-9xl font-black italic",
                     }}
                     normalTimeProps={{ className: "mt-8 text-4xl" }}
                 />

@@ -18,7 +18,19 @@ const inconsolata = Inconsolata({
 const whyte = localFont({
     src: "../fonts/ABCWhytePlusVariableEdu-Regular.woff2",
     fallback: ["system-ui", "sans-serif"],
-    variable: "--font-whyte-plus",
+    variable: "--font-whyte",
+});
+
+const polySans = localFont({
+    src: [
+        {
+            path: "../fonts/polysanstrial-neutral.otf",
+            weight: "400",
+            style: "normal",
+        },
+    ],
+    fallback: ["system-ui", "sans-serif"],
+    variable: "--font-polysans",
 });
 
 export const generateMetadata = async (): Promise<Metadata> => {
@@ -60,7 +72,7 @@ export default function RootLayout({
     return (
         <html lang="en" className="h-dvh w-dvw">
             <body
-                className={`${inconsolata.variable} ${silkscreen.variable} ${whyte.variable} text-foreground font-inconsolata h-dvh w-dvw antialiased`}
+                className={`${inconsolata.variable} ${silkscreen.variable} ${whyte.variable} ${polySans.variable} text-foreground font-inconsolata h-dvh w-dvw antialiased`}
             >
                 <div className="size-full bg-black p-8">{children}</div>
             </body>

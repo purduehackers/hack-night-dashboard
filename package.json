@@ -11,13 +11,16 @@
         "check::fmt": "prettier --check ."
     },
     "dependencies": {
+        "@hackernoon/pixel-icon-library": "^1.0.6",
         "@paper-design/shaders-react": "^0.0.71",
+        "@payloadcms/richtext-lexical": "^3.76.1",
         "@purduehackers/time": "^0.7.0",
         "@radix-ui/react-alert-dialog": "^1.1.15",
         "@radix-ui/react-toast": "^1.2.15",
         "@sentry/nextjs": "^10",
         "@vercel/edge-config": "^1.4.3",
         "clsx": "^2.1.1",
+        "discord-api-types": "^0.38.38",
         "lucide-react": "^0.563.0",
         "motion": "^12.34.0",
         "next": "16.1.6",

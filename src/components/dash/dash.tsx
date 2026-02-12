@@ -8,7 +8,7 @@ import { ActivatePopup } from "./activate-popup";
 import { DitheredSoup } from "@/components/dithered-soup";
 import { Countdown } from "./countdown";
 import { Coordinator } from "./coordinator";
-import { SessionAnnouncer } from "../sessions";
+import { SessionAnnouncer } from "./sessions";
 import { LightningClock } from "./clock";
 
 const { version, maintainer } = await getConfigs("version", "maintainer");
@@ -31,7 +31,7 @@ export const Dash: FC = () => (
                             }}
                             lightningTimeProps={{
                                 className:
-                                    "text-ph-yellow font-sans text-8xl font-black whitespace-nowrap italic",
+                                    "text-ph-yellow font-whyte text-8xl font-black whitespace-nowrap italic",
                             }}
                             normalTimeProps={{
                                 className: "text-3xl font-bold",
