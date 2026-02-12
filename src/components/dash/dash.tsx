@@ -6,9 +6,10 @@ import { DoorbellNotifier } from "@/components/doorbell/doorbell-notifier";
 import { NotificationProvider } from "@/components/ui/notification-provider";
 import { ActivatePopup } from "./activate-popup";
 import { DitheredSoup } from "@/components/dithered-soup";
-import { LightningClock } from "./clock";
+import { Countdown } from "./countdown";
 import { Coordinator } from "./coordinator";
 import { SessionAnnouncer } from "../sessions";
+import { LightningClock } from "./clock";
 
 const { version, maintainer } = await getConfigs("version", "maintainer");
 
@@ -17,12 +18,25 @@ export const Dash: FC = () => (
         <NotificationProvider>
             <ActivatePopup />
             <SessionAnnouncer />
+            <Countdown />
             <DoorbellProvider>
                 <DoorbellNotifier maintainer={maintainer} />
                 <div className="relative flex h-full w-full flex-row">
                     <div className="flex grow flex-col">
                         <TitleSection />
-                        <LightningClock />
+                        <LightningClock
+                            containerProps={{
+                                className:
+                                    "flex flex-row items-end justify-between gap-16 border bg-black p-16",
+                            }}
+                            lightningTimeProps={{
+                                className:
+                                    "text-ph-yellow font-sans text-8xl font-black whitespace-nowrap italic",
+                            }}
+                            normalTimeProps={{
+                                className: "text-3xl font-bold",
+                            }}
+                        />
                     </div>
                     <div className="border-ph-purple relative w-[20dvw] border border-l-0 p-16">
                         {/* Live feed placeholder panel */}
