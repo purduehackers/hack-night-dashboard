@@ -18,10 +18,16 @@ const AS_MS = {
     day: 24 * 60 * 60 * 1000,
 } as const;
 
-/** How long to announce a session for */
-const SESSION_ANNOUNCEMENT_DURATION_MS = AS_MS.minute;
-/** List of times (in minutes prior to session) at which to announce a session. */
-const SESSION_ANNOUNCEMENT_TIMES_MINUTES = [1, 10, 30] as const;
+/**
+ * When to announce sessions and for how long each time
+ */
+const SESSION_ANNOUNCEMENT_TIMES: Readonly<
+    { minutesBefore: number; durationMinutes: number }[]
+> = [
+    { minutesBefore: 1, durationMinutes: 2 },
+    { minutesBefore: 10, durationMinutes: 1 },
+    { minutesBefore: 30, durationMinutes: 1 },
+] as const;
 
 function fetcher([baseUrl, since, until]: [string, Date, Date]) {
     const params = new URLSearchParams({
@@ -76,12 +82,15 @@ export const SessionAnnouncer: FC = () => {
             ? undefined
             : data?.docs.find((session) => {
                   const startTime = new Date(session.date).getTime();
-                  return SESSION_ANNOUNCEMENT_TIMES_MINUTES.some((mins) => {
-                      const startAnnouncing = startTime - mins * AS_MS.minute;
-                      const stopAnnouncing =
-                          startAnnouncing + SESSION_ANNOUNCEMENT_DURATION_MS;
-                      return startAnnouncing <= now && now < stopAnnouncing;
-                  });
+                  return SESSION_ANNOUNCEMENT_TIMES.some(
+                      ({ minutesBefore, durationMinutes }) => {
+                          const startAnnouncing =
+                              startTime - minutesBefore * AS_MS.minute;
+                          const stopAnnouncing =
+                              startAnnouncing + durationMinutes * AS_MS.minute;
+                          return startAnnouncing <= now && now < stopAnnouncing;
+                      },
+                  );
               });
 
     return (
@@ -97,8 +106,9 @@ export const SessionAnnouncer: FC = () => {
 };
 
 function timerText(sessionDate: string, now: number): string {
-    const date = new Date(sessionDate);
-    const msLeft = date.getTime() - now;
+    const start = new Date(sessionDate).getTime();
+    if (start <= now) return "starting now";
+    const msLeft = start - now;
     console.log({ msLeft });
     const minutesLeft = Math.floor(msLeft / AS_MS.minute);
     const secondsLeft = Math.floor(msLeft / AS_MS.second);
