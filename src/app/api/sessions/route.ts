@@ -90,9 +90,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         limit: 100,
         sort: "date",
         where: {
-            // published: {
-            //     equals: true,
-            // },
+            published: {
+                equals: true,
+            },
             date: {
                 greater_than_equal: since,
                 less_than_equal: until,
