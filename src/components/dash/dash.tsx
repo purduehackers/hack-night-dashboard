@@ -10,6 +10,7 @@ import { Countdown } from "./countdown";
 import { Coordinator } from "./coordinator";
 import { SessionAnnouncer } from "./sessions";
 import { LightningClock } from "./clock";
+import { ScreenyNoSleepy } from "./waker";
 
 const { version, maintainer } = await getConfigs("version", "maintainer");
 
@@ -19,6 +20,7 @@ export const Dash: FC = () => (
             <ActivatePopup />
             <SessionAnnouncer />
             <Countdown />
+            <ScreenyNoSleepy />
             <DoorbellProvider>
                 <DoorbellNotifier maintainer={maintainer} />
                 <div className="relative flex h-full w-full flex-row">
