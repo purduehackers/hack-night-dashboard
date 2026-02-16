@@ -60,11 +60,11 @@ const TitleSection: FC = async () => {
                 </div>
                 <h1 className="font-silkscreen text-9xl font-normal">
                     <span>
-                        <i>H</i>ack
+                        <i className="me-2">H</i>ack
                     </span>
                     <br />
                     <span>
-                        N<i>i</i>ght
+                        N<i className="relative -left-1.5">i</i>ght
                     </span>
                 </h1>
                 <div className="text-ph-yellow font-inconsolata col-2 ms-4 mt-4 text-4xl font-bold">
