@@ -11,6 +11,7 @@ import { Coordinator } from "./coordinator";
 import { SessionAnnouncer } from "./sessions";
 import { LightningClock } from "./clock";
 import { ScreenyNoSleepy } from "./waker";
+import { DiscordFeed } from "./discord-feed";
 
 const { version, maintainer } = await getConfigs("version", "maintainer");
 
@@ -24,7 +25,7 @@ export const Dash: FC = () => (
             <DoorbellProvider>
                 <DoorbellNotifier maintainer={maintainer} />
                 <div className="relative flex h-full w-full flex-row">
-                    <div className="flex grow flex-col">
+                    <div className="flex flex-3 flex-col">
                         <TitleSection />
                         <LightningClock
                             containerProps={{
@@ -40,9 +41,8 @@ export const Dash: FC = () => (
                             }}
                         />
                     </div>
-                    <div className="border-ph-purple relative w-[20dvw] border border-l-0 p-16">
-                        {/* Live feed placeholder panel */}
-                        <DitheredSoup fgColor="#fe0" />
+                    <div className="border-ph-purple relative flex-1 overflow-hidden border border-l-0 p-8">
+                        <DiscordFeed />
                     </div>
                 </div>
             </DoorbellProvider>

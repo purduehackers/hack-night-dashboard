@@ -19,6 +19,7 @@
     --color-ph-yellow: #ffee00;
     --color-ph-amber: rgb(253, 211, 74);
     --color-ph-purple: #7e3cff;
+    --color-ph-pink: #efb9ff;
 
     /* I stole these from inspector and changed the color-mix() to composite
        with the proper background color */

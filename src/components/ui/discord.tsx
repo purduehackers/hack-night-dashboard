@@ -41,7 +41,7 @@ export const DiscordUserMention: FC<
 export const DiscordUserAvatar: FC<
     DiscordUserProps &
         Omit<ComponentPropsWithRef<typeof Image>, "src" | "alt" | "srcSet"> & {
-            size?: 16 | 32 | 64 | 128 | 256 | 512 | 1024 | 2048 | 4096;
+            size: 16 | 32 | 64 | 128 | 256 | 512 | 1024 | 2048 | 4096;
         }
 > = ({ userId, displayName, avatarHash, size, className, ...restProps }) => {
     const sizeParam = size ? `?size=${size}` : "";

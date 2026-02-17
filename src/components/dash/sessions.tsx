@@ -7,8 +7,8 @@ import { convertLexicalToHTML } from "@payloadcms/richtext-lexical/html";
 import { LightningClock } from "./clock";
 import { useCoordinator } from "./coordinator";
 import { HydratedSession, SessionsAPIResponseSchema } from "@/lib/cms";
-import { DiscordUserMention } from "./discord";
-import { GliderFlat, PixelClock } from "../icons";
+import { DiscordUserMention } from "@/components/ui/discord";
+import { GliderFlat, PixelClock } from "@/components/icons";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 

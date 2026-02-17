@@ -1,0 +1,33 @@
+@reference "../../app/globals.css";
+
+.discord-text {
+    & .mention {
+        padding: 0.1em 0.3em;
+        border-radius: 3px;
+        font-weight: 500;
+    }
+
+    & .mention {
+        @apply text-ph-pink bg-ph-purple/40 font-inconsolata;
+    }
+
+    & a:not(.mention) {
+        @apply text-ph-pink font-inconsolata underline;
+    }
+
+    & .discord-emoji {
+        height: 1.4em;
+        width: auto;
+        vertical-align: -0.3em;
+        display: inline;
+        object-fit: contain;
+    }
+
+    & ul {
+        @apply list-inside list-disc;
+    }
+
+    & ol {
+        @apply list-inside list-decimal;
+    }
+}
