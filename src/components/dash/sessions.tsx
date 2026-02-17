@@ -29,7 +29,7 @@ const SESSION_ANNOUNCEMENT_TIMES: Readonly<
     { minutesBefore: 30, durationMinutes: 1 },
 ] as const;
 
-function fetcher([baseUrl, since, until]: [string, Date, Date]) {
+export async function fetcher([baseUrl, since, until]: [string, Date, Date]) {
     const params = new URLSearchParams({
         since: since.toISOString(),
         until: until.toISOString(),
@@ -119,10 +119,10 @@ function timerText(sessionDate: string, now: number): string {
         : `in ${secondsLeft} second${suffix}`;
 }
 
-const SessionOverlayContent: FC<{ session: HydratedSession; now: number }> = ({
-    session,
-    now,
-}) => {
+export const SessionOverlayContent: FC<{
+    session: HydratedSession;
+    now: number;
+}> = ({ session, now }) => {
     // const images = [...session.images!, ...session.images!];
     const hasDiscord = session.host.discordName !== undefined;
     const namesSame =
