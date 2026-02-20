@@ -30,4 +30,17 @@
     & ol {
         @apply list-inside list-decimal;
     }
+
+    & pre,
+    & :not(pre) > code {
+        @apply bg-ph-purple/30 border-ph-purple rounded-md border p-[0.25em] py-[0.0125em] text-sm font-medium;
+    }
+
+    & pre {
+        @apply line-clamp-3 overflow-hidden text-ellipsis;
+    }
+
+    & pre > code {
+        @apply font-[inherit];
+    }
 }
