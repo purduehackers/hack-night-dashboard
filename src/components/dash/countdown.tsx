@@ -9,10 +9,12 @@ import { Overlay } from "@/components/ui/overlay";
 import { createPortal } from "react-dom";
 import { useCoordinator } from "@/components/dash/coordinator";
 import { LightningClock } from "./clock";
+import { useSound } from "@/lib/sound";
 
 const CONFETTI_DURATION_SECONDS = 10;
 
-const announcementStartTime = "f~f~d|1";
+const announcementStartTime = "f~f~8|8"; // 23:57:30
+const clockSoundStartTime = "f~f~d|2"; // 23:59
 const countdownStartTime = "f~f~e|b";
 const midnight = "0~0~0|0";
 const countdownEndTime = "0~0~0|2";
@@ -28,6 +30,7 @@ const confettiStopTime = ((): string => {
 export const Countdown: FC = () => {
     const { lightningString } = useLightningTimeClock();
     const { pauseNotifications, unpauseNotifications } = useCoordinator();
+    const { play, pause } = useSound("/clock.mp3", { loop: true });
 
     // Lightning time is lexicographically ordered, so string comparisons work
 
@@ -38,6 +41,10 @@ export const Countdown: FC = () => {
 
     const isAnnouncing =
         lightningString >= announcementStartTime &&
+        lightningString < countdownStartTime;
+
+    const isSoundPlaying =
+        lightningString >= clockSoundStartTime &&
         lightningString < countdownStartTime;
 
     const isConfetti = lightningString < confettiStopTime;
@@ -51,6 +58,15 @@ export const Countdown: FC = () => {
             unpauseNotifications();
         }
     }, [isCountdown, pauseNotifications, unpauseNotifications]);
+
+    // Play audio when it's time
+    useEffect(() => {
+        if (isSoundPlaying) {
+            play();
+        } else {
+            pause();
+        }
+    }, [isSoundPlaying, play, pause]);
 
     const content = (
         <>
