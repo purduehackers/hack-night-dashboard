@@ -7,8 +7,8 @@ import {
 } from "@/components/doorbell/doorbell-context";
 import { ToastNotification } from "@/components/ui/toast-notification";
 import { Spinner } from "@/components/ui/spinner";
-import useSound from "use-sound";
 import { DoorbellAlert } from "./doorbell-alert";
+import { useSound } from "@/lib/sound";
 
 const DEBOUNCE_SECONDS = 20;
 
@@ -20,7 +20,7 @@ export const DoorbellNotifier: FC<DoorbellNotifierProps> = ({ maintainer }) => {
     // Controls the visibility of the doorbell connection notification
     const [notificationVisible, setNotificationVisible] = useState(false);
     // I don't know why we use 0.85, but that's what the old dashboard used
-    const [playSound] = useSound("/doorbell.mp3", { volume: 0.85 });
+    const { play: playSound } = useSound("/doorbell.mp3");
     // Controls the visibility of the doorbell alert
     const [alertOpen, setAlertOpen] = useState(false);
     // True if in the debounce period

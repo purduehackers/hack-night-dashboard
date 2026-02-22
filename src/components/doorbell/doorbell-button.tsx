@@ -3,11 +3,11 @@
 import { FC, useEffect } from "react";
 import { ConnectionState, useDoorbell } from "./doorbell-context";
 import { cn } from "@/lib/utils";
-import useSound from "use-sound";
+import { useSound } from "@/lib/sound";
 
 export const DoorbellButton: FC = () => {
     const { ringing, setRinging, connectionState } = useDoorbell();
-    const [playSound] = useSound("/doorbell.mp3");
+    const { play: playSound } = useSound("/doorbell.mp3");
 
     useEffect(() => {
         if (ringing) {
