@@ -25,21 +25,32 @@ export const LightningClock: FC<Props> = ({
         containerProps ?? {};
     const { className: lightningClassName, ...restLightningProps } =
         lightningTimeProps ?? {};
+    const gradient = lightningColorGradient(colors);
     return (
         <div
             {...restContainerProps}
             style={{
                 ...containerStyle,
-                borderImageSource: lightningColorGradient(colors),
+                borderImageSource: gradient,
                 borderImageSlice: 1,
             }}
         >
             <div
-                className={cn("grid grid-cols-1", lightningClassName)}
+                className={cn(
+                    "grid grid-cols-1 text-transparent",
+                    lightningClassName,
+                )}
                 {...restLightningProps}
             >
                 <div className="invisible [grid-area:1/1]">0~0~0|0</div>
-                <div className="[grid-area:1/1]">{lightningString}</div>
+                <div
+                    className="bg-clip-text [grid-area:1/1]"
+                    style={{
+                        backgroundImage: gradient,
+                    }}
+                >
+                    {lightningString}
+                </div>
             </div>
             <div {...normalTimeProps}>({formattedNormalTime})</div>
         </div>

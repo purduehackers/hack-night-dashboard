@@ -194,6 +194,7 @@ export const SessionOverlayContent: FC<{
                         className:
                             "absolute right-0 bottom-0 flex gap-4 h-8 items-center px-4 text-base font-bold drop-shadow-sm drop-shadow-black",
                     }}
+                    lightningTimeProps={{ className: "text-foreground" }}
                 />
             </div>
         </div>

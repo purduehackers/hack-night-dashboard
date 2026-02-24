@@ -122,8 +122,10 @@ const Announcement: FC<{ open: boolean }> = ({ open }) => {
                         className:
                             "font-bold drop-shadow-sm drop-shadow-black flex items-center gap-8",
                     }}
-                    lightningTimeProps={{ className: "text-4xl" }}
-                    normalTimeProps={{ className: "text-2xl" }}
+                    lightningTimeProps={{
+                        className: "text-foreground text-5xl",
+                    }}
+                    normalTimeProps={{ className: "text-3xl" }}
                 />
             </div>
         </Overlay>
@@ -139,8 +141,7 @@ const CountdownClock: FC<{ open: boolean }> = ({ open }) => {
                         className: "border-5 bg-black p-32 text-center",
                     }}
                     lightningTimeProps={{
-                        className:
-                            "text-ph-yellow font-whyte text-9xl font-black italic",
+                        className: "font-whyte text-9xl font-black italic",
                     }}
                     normalTimeProps={{ className: "mt-8 text-4xl" }}
                 />

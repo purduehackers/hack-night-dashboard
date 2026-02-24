@@ -34,10 +34,10 @@ export const Dash: FC = () => (
                             }}
                             lightningTimeProps={{
                                 className:
-                                    "text-ph-yellow font-whyte text-8xl font-black whitespace-nowrap italic",
+                                    "font-whyte text-8xl font-black whitespace-nowrap italic",
                             }}
                             normalTimeProps={{
-                                className: "text-3xl font-bold",
+                                className: "text-4xl font-bold",
                             }}
                         />
                     </div>
