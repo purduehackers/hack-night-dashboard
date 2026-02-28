@@ -88,7 +88,7 @@ export const DiscordFeed: FC = () => {
     }, []);
 
     return messages.length > 0 ? (
-        <div className="h-full text-lg">
+        <div className="h-full text-2xl">
             {/* Overlay a translucent gradient to make messages "fade out" towards top */}
             <div
                 className="pointer-events-none absolute top-0 z-10 h-30 w-full"
@@ -130,26 +130,26 @@ const DiscordMessage: FC<{ message: DiscordMessage }> = ({ message }) => {
             }}
             className="border-foreground/20 py-2 not-last:border-t first:pb-0"
         >
-            <div className="flex items-center justify-between font-medium text-nowrap">
-                <span className="text-ph-yellow min-w-0 shrink overflow-hidden text-ellipsis whitespace-nowrap">
-                    #{message.channel.name}
-                </span>
-                <span className="flex-none">
-                    &nbsp;&gt;&nbsp;
-                    <DiscordUserMention
-                        kind="withImage"
-                        userId={message.author.id}
-                        displayName={message.author.name}
-                        avatarHash={message.author.avatarHash}
-                        className="text-ph-pink bg-ph-purple/40"
-                    />
-                </span>
-                <div className="text-foreground/70 ms-4 grow text-right text-base font-normal">
+            <DiscordUserMention
+                kind="withImage"
+                userId={message.author.id}
+                displayName={message.author.name}
+                avatarHash={message.author.avatarHash}
+                className="text-ph-pink bg-ph-purple/40"
+            />
+            <div className="flex flex-row items-center">
+                <div className="grow overflow-hidden text-2xl font-medium text-nowrap text-ellipsis">
+                    in{" "}
+                    <span className="text-ph-yellow">
+                        #{message.channel.name}
+                    </span>
+                </div>
+                <div className="text-foreground/70 ms-4 grow text-right font-normal">
                     {time}
                 </div>
             </div>
             <div
-                className="discord-text font-polysans line-clamp-3 text-base leading-tight text-ellipsis"
+                className="discord-text font-polysans line-clamp-3 text-2xl leading-tight text-ellipsis"
                 dangerouslySetInnerHTML={{ __html: message.content.html }}
             />
         </motion.div>

@@ -25,7 +25,7 @@ export const Dash: FC = () => (
             <DoorbellProvider>
                 <DoorbellNotifier maintainer={maintainer} />
                 <div className="relative flex h-full w-full flex-row">
-                    <div className="flex flex-3 flex-col">
+                    <div className="flex flex-2 flex-col">
                         <TitleSection />
                         <LightningClock
                             containerProps={{
