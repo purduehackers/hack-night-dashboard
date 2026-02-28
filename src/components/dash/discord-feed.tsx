@@ -144,7 +144,7 @@ const DiscordMessage: FC<{ message: DiscordMessage }> = ({ message }) => {
                         #{message.channel.name}
                     </span>
                 </div>
-                <div className="text-foreground/70 ms-4 grow text-right font-normal">
+                <div className="text-foreground/70 ms-4 grow text-right font-normal whitespace-nowrap">
                     {time}
                 </div>
             </div>
