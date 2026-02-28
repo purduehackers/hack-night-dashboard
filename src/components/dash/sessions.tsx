@@ -138,7 +138,7 @@ export const SessionOverlayContent: FC<{
     ) : null;
 
     return (
-        <div className="relative size-full p-8">
+        <div className="relative size-full p-16">
             <div className="border-ph-purple flex size-full flex-col justify-between gap-8 border bg-black p-8">
                 <h1 className="font-silkscreen text-ph-yellow text-[9rem] leading-[0.85]">
                     {session.title.split("").map((c, i) => (
