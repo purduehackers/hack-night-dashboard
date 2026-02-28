@@ -4,6 +4,7 @@ import {
     createContext,
     FC,
     PropsWithChildren,
+    useCallback,
     useContext,
     useEffect,
     useRef,
@@ -23,6 +24,8 @@ interface DoorbellContextInterface {
     doorbellState: boolean;
     connectionState: ConnectionState;
     setDoorbellState: (status: boolean) => void;
+    diagnostic: Diagnostic | null;
+    clearDiagnostic: () => void;
 }
 
 const messageSchema = z.discriminatedUnion("type", [
@@ -33,8 +36,15 @@ const messageSchema = z.discriminatedUnion("type", [
     z.object({
         type: z.enum(["ping", "pong"]),
     }),
+    z.object({
+        type: z.literal("diagnostic"),
+        level: z.enum(["info", "warning", "error"]),
+        kind: z.string(),
+        message: z.string(),
+    }),
 ]);
 type Message = z.infer<typeof messageSchema>;
+type Diagnostic = Extract<Message, { type: "diagnostic" }>;
 
 const DoorbellContext = createContext<DoorbellContextInterface | undefined>(
     undefined,
@@ -46,6 +56,7 @@ export const DoorbellProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
     const [connectionState, setConnectionState] = useState<ConnectionState>(
         ConnectionState.Connecting,
     );
+    const [diagnostic, setDiagnostic] = useState<Diagnostic | null>(null);
 
     const WS_URL = "wss://api.purduehackers.com/doorbell";
     const ws = useRef<ReconnectingWebSocket | null>(null);
@@ -95,6 +106,8 @@ export const DoorbellProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
                 const message = messageSchema.parse(json);
                 if (message.type === "status") {
                     setDoorbellStateInternal(message.ringing);
+                } else if (message.type === "diagnostic") {
+                    setDiagnostic(message);
                 }
             } catch (error) {
                 Sentry.captureException(error, {
@@ -133,12 +146,18 @@ export const DoorbellProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
         }
     };
 
+    const clearDiagnostic = useCallback(() => {
+        setDiagnostic(null);
+    }, []);
+
     return (
         <DoorbellContext
             value={{
                 doorbellState,
                 connectionState,
                 setDoorbellState,
+                diagnostic,
+                clearDiagnostic,
             }}
         >
             {children}
@@ -156,6 +175,6 @@ export const useDoorbell = () => {
     return {
         ringing: context.doorbellState,
         setRinging: context.setDoorbellState,
-        connectionState: context.connectionState,
+        ...context,
     };
 };

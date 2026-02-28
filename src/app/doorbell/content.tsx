@@ -11,7 +11,7 @@ interface Props {
     maintainer: string;
 }
 export default function DoorbellPageContent({ maintainer }: Props) {
-    const { connectionState } = useDoorbell();
+    const { connectionState, diagnostic } = useDoorbell();
 
     let title: string;
     switch (connectionState) {
@@ -47,6 +47,33 @@ export default function DoorbellPageContent({ maintainer }: Props) {
                             In the meantime, send a message in the Purdue
                             Hackers Discord server so someone can let you in.
                         </p>
+                    </div>
+                ) : diagnostic !== null ? (
+                    <div className="max-w-xl overflow-auto border border-amber-500 bg-black p-8 text-lg *:not-first:mt-4">
+                        <h2 className="text-xl">
+                            <span className="font-bold">
+                                {diagnostic.level[0].toUpperCase() +
+                                    diagnostic.level.slice(1)}
+                                :
+                            </span>{" "}
+                            {diagnostic.kind === "NoClientsError" ? (
+                                <span>
+                                    There are no clients listening to the
+                                    doorbell right now. This probably means
+                                    nobody will come down to let you in. Please
+                                    send a message in{" "}
+                                    <a
+                                        href="https://discord.com/channels/772576325897945119/1020777328172859412"
+                                        className="underline"
+                                    >
+                                        #🌙hack-night
+                                    </a>{" "}
+                                    instead.
+                                </span>
+                            ) : (
+                                diagnostic.message
+                            )}
+                        </h2>
                     </div>
                 ) : (
                     <DoorbellButton />
