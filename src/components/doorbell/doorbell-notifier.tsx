@@ -23,11 +23,8 @@ export const DoorbellNotifier: FC<DoorbellNotifierProps> = ({ maintainer }) => {
     const { play: playSound } = useSound("/doorbell.mp3");
     // Controls the visibility of the doorbell alert
     const [alertOpen, setAlertOpen] = useState(false);
-    // True if in the debounce period
-    const [debounce, setDebounce] = useState(false);
 
     function dismissDoorbell() {
-        setDebounce(false);
         setAlertOpen(false);
         setRinging(false);
     }
@@ -44,13 +41,12 @@ export const DoorbellNotifier: FC<DoorbellNotifierProps> = ({ maintainer }) => {
     // 1. play the sound
     // 2. show an alert that disappears in 20 seconds
     useEffect(() => {
-        if (ringing && !debounce) {
+        if (ringing && !alertOpen) {
             playSound();
             // eslint-disable-next-line react-hooks/set-state-in-effect
-            setDebounce(true);
             setAlertOpen(true);
         }
-    }, [ringing, playSound, debounce]);
+    }, [ringing, playSound, alertOpen]);
 
     let notification: {
         title: string;
