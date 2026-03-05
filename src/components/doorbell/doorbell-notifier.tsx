@@ -20,11 +20,12 @@ export const DoorbellNotifier: FC<DoorbellNotifierProps> = ({ maintainer }) => {
     // Controls the visibility of the doorbell connection notification
     const [notificationVisible, setNotificationVisible] = useState(false);
     // I don't know why we use 0.85, but that's what the old dashboard used
-    const { play: playSound } = useSound("/doorbell.mp3");
+    const { play: playSound, pause: pauseSound } = useSound("/doorbell.mp3");
     // Controls the visibility of the doorbell alert
     const [alertOpen, setAlertOpen] = useState(false);
 
     function dismissDoorbell() {
+        pauseSound();
         setAlertOpen(false);
         setRinging(false);
     }
@@ -37,16 +38,21 @@ export const DoorbellNotifier: FC<DoorbellNotifierProps> = ({ maintainer }) => {
         setNotificationVisible(true);
     }, [connectionState]);
 
-    // When someone rings the doorbell,
-    // 1. play the sound
-    // 2. show an alert that disappears in 20 seconds
     useEffect(() => {
         if (ringing && !alertOpen) {
+            // When someone rings the doorbell,
+            // 1. play the sound
+            // 2. show an alert that disappears in 20 seconds
             playSound();
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setAlertOpen(true);
+        } else if (!ringing && alertOpen) {
+            // When any dashboard dismisses the doorbell, dismiss it on this
+            // one too.
+            pauseSound();
+            setAlertOpen(false);
         }
-    }, [ringing, playSound, alertOpen]);
+    }, [ringing, playSound, pauseSound, alertOpen]);
 
     let notification: {
         title: string;

@@ -32,8 +32,10 @@ export function useSound(src: string, opts: UseSoundOptions = {}) {
             if (rewind && audioRef.current) {
                 audioRef.current.currentTime = 0;
             }
-            return audioRef.current?.play();
+            return audioRef.current
+                ?.play()
+                .catch((error) => console.error("Error playing sound", error));
         }, [rewind]),
-        pause: useCallback(async () => audioRef.current?.pause(), []),
+        pause: useCallback(() => audioRef.current?.pause(), []),
     };
 }
