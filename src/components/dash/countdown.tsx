@@ -29,7 +29,7 @@ const confettiStopTime = ((): string => {
 
 export const Countdown: FC = () => {
     const { lightningString } = useLightningTimeClock();
-    const { pauseNotifications, unpauseNotifications } = useCoordinator();
+    const { pauseAllPopups, unpauseAllPopups } = useCoordinator();
     const { play, pause } = useSound("/clock.mp3", { loop: true });
 
     // Lightning time is lexicographically ordered, so string comparisons work
@@ -53,11 +53,11 @@ export const Countdown: FC = () => {
     // Runs on mount as well, so mounting during countdown applies the pause.
     useEffect(() => {
         if (isCountdown) {
-            pauseNotifications();
+            pauseAllPopups();
         } else {
-            unpauseNotifications();
+            unpauseAllPopups();
         }
-    }, [isCountdown, pauseNotifications, unpauseNotifications]);
+    }, [isCountdown, pauseAllPopups, unpauseAllPopups]);
 
     // Play audio when it's time
     useEffect(() => {

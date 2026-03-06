@@ -20,7 +20,6 @@ export function useSound(src: string, opts: UseSoundOptions = {}) {
 
     useEffect(() => {
         const audio = new Audio(src);
-        console.log("audio", audio);
         audio.loop = loop;
 
         audioRef.current = audio;
