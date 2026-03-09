@@ -12,6 +12,7 @@ import {
     useMemo,
     useState,
 } from "react";
+import { useUpdateChecker } from "@/hooks/use-update-checker";
 
 export interface CoordinatorInfo {
     /**
@@ -35,6 +36,7 @@ const CoordinatorContext = createContext<CoordinatorInfo | undefined>(
 );
 
 export const Coordinator: FC<PropsWithChildren<unknown>> = ({ children }) => {
+    useUpdateChecker();
     const [pauseCount, setPauseCount] = useState(0);
 
     const pauseNotifications = useCallback(() => {
