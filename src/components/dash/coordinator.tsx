@@ -12,8 +12,13 @@ import {
     useMemo,
     useState,
 } from "react";
+import { useUpdateChecker } from "@/hooks/use-update-checker";
 
 export interface CoordinatorInfo {
+    /**
+     * The current hack night version string, kept in sync with edge config.
+     */
+    version: string;
     /**
      * Whether notifications are paused.
      */
@@ -34,7 +39,11 @@ const CoordinatorContext = createContext<CoordinatorInfo | undefined>(
     undefined,
 );
 
-export const Coordinator: FC<PropsWithChildren<unknown>> = ({ children }) => {
+export const Coordinator: FC<PropsWithChildren<{ initialVersion: string }>> = ({
+    initialVersion,
+    children,
+}) => {
+    const version = useUpdateChecker(initialVersion);
     const [pauseCount, setPauseCount] = useState(0);
 
     const pauseNotifications = useCallback(() => {
@@ -45,13 +54,14 @@ export const Coordinator: FC<PropsWithChildren<unknown>> = ({ children }) => {
         setPauseCount((prev) => Math.max(0, prev - 1));
     }, []);
 
-    const info: CoordinatorInfo = useMemo<CoordinatorInfo>(
+    const info = useMemo<CoordinatorInfo>(
         () => ({
+            version,
             notificationsPaused: pauseCount > 0,
             pauseNotifications,
             unpauseNotifications,
         }),
-        [pauseCount, pauseNotifications, unpauseNotifications],
+        [version, pauseCount, pauseNotifications, unpauseNotifications],
     );
     return (
         <CoordinatorContext.Provider value={info}>
@@ -67,5 +77,14 @@ export function useCoordinator(): CoordinatorInfo {
             "useCoordinator() must be called from inside a <Coordinator>",
         );
     }
-    return { ...info };
+    return info;
 }
+
+export const VersionBadge: FC = () => {
+    const { version } = useCoordinator();
+    return (
+        <div className="text-ph-yellow font-inconsolata col-2 ms-4 mt-4 text-4xl font-bold">
+            {version}
+        </div>
+    );
+};

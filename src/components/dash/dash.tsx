@@ -7,7 +7,7 @@ import { NotificationProvider } from "@/components/ui/notification-provider";
 import { ActivatePopup } from "./activate-popup";
 import { DitheredSoup } from "@/components/dithered-soup";
 import { Countdown } from "./countdown";
-import { Coordinator } from "./coordinator";
+import { Coordinator, VersionBadge } from "./coordinator";
 import { SessionAnnouncer } from "./sessions";
 import { LightningClock } from "./clock";
 import { ScreenyNoSleepy } from "./waker";
@@ -16,7 +16,7 @@ import { DiscordFeed } from "./discord-feed";
 const { version, maintainer } = await getConfigs("version", "maintainer");
 
 export const Dash: FC = () => (
-    <Coordinator>
+    <Coordinator initialVersion={version}>
         <NotificationProvider>
             <ActivatePopup />
             <SessionAnnouncer />
@@ -50,7 +50,7 @@ export const Dash: FC = () => (
     </Coordinator>
 );
 
-const TitleSection: FC = async () => {
+const TitleSection: FC = () => {
     return (
         <div className="border-ph-purple relative flex grow items-center gap-8 border border-b-0 p-16 text-white">
             <DitheredSoup />
@@ -67,9 +67,7 @@ const TitleSection: FC = async () => {
                         N<i className="relative -left-1.5">i</i>ght
                     </span>
                 </h1>
-                <div className="text-ph-yellow font-inconsolata col-2 ms-4 mt-4 text-4xl font-bold">
-                    {version}
-                </div>
+                <VersionBadge />
             </div>
         </div>
     );
