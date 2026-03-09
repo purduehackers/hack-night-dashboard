@@ -1,26 +1,29 @@
 "use client";
 
 import { captureException } from "@sentry/nextjs";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const POLL_INTERVAL = 30_000;
 
-export function useUpdateChecker() {
+interface UpdateHashResponse {
+    hash: string;
+    version: string;
+}
+
+export function useUpdateChecker(initialVersion: string): string {
     const hashRef = useRef<string | null>(null);
+    const [version, setVersion] = useState(initialVersion);
 
     useEffect(() => {
         async function checkForUpdate() {
             try {
                 const res = await fetch("/api/update-hash");
                 if (!res.ok) return;
-                const { hash } = (await res.json()) as { hash: string };
-                if (hashRef.current === null) {
-                    hashRef.current = hash;
-                } else if (hashRef.current !== hash) {
-                    const url = new URL(window.location.href);
-                    url.searchParams.set("skip_audio", "1");
-                    window.location.href = url.toString();
+                const data = (await res.json()) as UpdateHashResponse;
+                if (hashRef.current !== null && hashRef.current !== data.hash) {
+                    setVersion(data.version);
                 }
+                hashRef.current = data.hash;
             } catch (error) {
                 captureException(error);
             }
@@ -30,4 +33,6 @@ export function useUpdateChecker() {
         const id = setInterval(checkForUpdate, POLL_INTERVAL);
         return () => clearInterval(id);
     }, []);
+
+    return version;
 }

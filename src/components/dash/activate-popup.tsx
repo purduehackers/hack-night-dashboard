@@ -1,14 +1,11 @@
 "use client";
 
 import { FC, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { PowerIcon } from "lucide-react";
 import { PopupDialog } from "../ui/popup-dialog";
 
 export const ActivatePopup: FC = () => {
-    const searchParams = useSearchParams();
-    const noAudio = searchParams.get("skip_audio") === "1";
-    const [isOpen, setIsOpen] = useState(!noAudio);
+    const [isOpen, setIsOpen] = useState(true);
 
     return isOpen ? (
         <PopupDialog
