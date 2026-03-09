@@ -20,10 +20,20 @@ export function useUpdateChecker(initialVersion: string): string {
                 const res = await fetch("/api/update-hash");
                 if (!res.ok) return;
                 const data = (await res.json()) as UpdateHashResponse;
-                if (hashRef.current !== null && hashRef.current !== data.hash) {
-                    setVersion(data.version);
+
+                if (hashRef.current === null) {
+                    // First successful poll: initialize hash and reconcile version if needed.
+                    hashRef.current = data.hash;
+                    if (data.version !== initialVersion) {
+                        setVersion(data.version);
+                    }
+                    return;
                 }
-                hashRef.current = data.hash;
+
+                if (hashRef.current !== data.hash) {
+                    setVersion(data.version);
+                    hashRef.current = data.hash;
+                }
             } catch (error) {
                 captureException(error);
             }
