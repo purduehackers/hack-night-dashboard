@@ -15,9 +15,14 @@ export function useUpdateChecker(initialVersion: string): string {
     const [version, setVersion] = useState(initialVersion);
 
     useEffect(() => {
-        async function checkForUpdate() {
+        const controller = new AbortController();
+        let timeoutId: ReturnType<typeof setTimeout>;
+
+        async function poll() {
             try {
-                const res = await fetch("/api/update-hash");
+                const res = await fetch("/api/update-hash", {
+                    signal: controller.signal,
+                });
                 if (!res.ok) return;
                 const data = (await res.json()) as UpdateHashResponse;
 
@@ -35,13 +40,20 @@ export function useUpdateChecker(initialVersion: string): string {
                     hashRef.current = data.hash;
                 }
             } catch (error) {
+                if (controller.signal.aborted) return;
                 captureException(error);
+            } finally {
+                if (!controller.signal.aborted) {
+                    timeoutId = setTimeout(poll, POLL_INTERVAL);
+                }
             }
         }
 
-        checkForUpdate();
-        const id = setInterval(checkForUpdate, POLL_INTERVAL);
-        return () => clearInterval(id);
+        poll();
+        return () => {
+            controller.abort();
+            clearTimeout(timeoutId);
+        };
     }, []);
 
     return version;
