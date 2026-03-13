@@ -27,7 +27,6 @@ export const DoorbellButton: FC = () => {
                 !ringing && "disabled:opacity-50 disabled:drop-shadow-none",
             )}
             onClick={() => {
-                console.log("click");
                 setRinging(true);
             }}
             disabled={connectionState !== ConnectionState.Connected || ringing}

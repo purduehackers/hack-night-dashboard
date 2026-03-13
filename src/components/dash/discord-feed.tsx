@@ -5,12 +5,24 @@ import { FC, useEffect, useRef, useState } from "react";
 import ReconnectingWebSocket from "reconnecting-websocket";
 import { addBreadcrumb, captureException } from "@sentry/nextjs";
 import z from "zod";
-import { DiscordUserMention } from "@/components/ui/discord";
+import { DiscordUserAvatar, DiscordUserMention } from "@/components/ui/discord";
 import { motion } from "motion/react";
+import { useCoordinator } from "./coordinator";
+import { Overlay } from "../ui/overlay";
+import { LightningClock } from "./clock";
+import { cn } from "@/lib/utils";
 
-const DISCORD_FEED_WS_URL =
-    process.env.DISCORD_FEED_WS_URL ??
-    "wss://api.purduehackers.com/discord/dashboard";
+const DISCORD_FEED_WS_URL = "wss://api.purduehackers.com/discord/dashboard";
+
+const CHECKPOINTS_CHANNEL_ID =
+    process.env.NODE_ENV === "development"
+        ? "1479527770483593266" // thread in #bot-dump
+        : "1052236377338683514"; // #checkpoints
+
+/**
+ * Amount of time for which each #checkpoints message will be presented.
+ */
+const CHECKPOINTS_DISPLAY_DURATION_MS = 30000;
 
 const discordMessageSchema = z.object({
     id: z.string(),
@@ -32,9 +44,19 @@ const discordMessageSchema = z.object({
 });
 type DiscordMessage = z.infer<typeof discordMessageSchema>;
 
+interface Checkpoint {
+    message: DiscordMessage;
+    msLeft: number;
+}
+
 export const DiscordFeed: FC = () => {
+    // Messages are ordered new to old
     const [messages, setMessages] = useState<DiscordMessage[]>([]);
+    // Order for checkpoints is old to new
+    const [checkpoints, setCheckpoints] = useState<Checkpoint[]>([]);
     const wsRef = useRef<ReconnectingWebSocket>(null);
+    const startTimeRef = useRef<number>(0);
+    const { checkpointsPaused } = useCoordinator();
 
     useEffect(() => {
         const ws = new ReconnectingWebSocket(DISCORD_FEED_WS_URL);
@@ -71,7 +93,14 @@ export const DiscordFeed: FC = () => {
         ws.addEventListener("message", (ev) => {
             try {
                 const message = discordMessageSchema.parse(JSON.parse(ev.data));
-                setMessages((prev) => [message, ...prev]);
+                setMessages((prev) => [message, ...prev.slice(0, 100)]);
+                if (message.channel.id === CHECKPOINTS_CHANNEL_ID) {
+                    const checkpoint: Checkpoint = {
+                        message,
+                        msLeft: CHECKPOINTS_DISPLAY_DURATION_MS,
+                    };
+                    setCheckpoints((prev) => [...prev, checkpoint]);
+                }
             } catch (error) {
                 captureException(error, {
                     tags: { component: DiscordFeed.displayName },
@@ -87,28 +116,88 @@ export const DiscordFeed: FC = () => {
         };
     }, []);
 
-    return messages.length > 0 ? (
-        <div className="h-full text-2xl">
-            {/* Overlay a translucent gradient to make messages "fade out" towards top */}
-            <div
-                className="pointer-events-none absolute top-0 z-10 h-30 w-full"
-                style={{
-                    backgroundImage:
-                        "linear-gradient(to bottom, #000000aa, #00000000)",
-                }}
-                aria-hidden
-            />
+    // Timer effect: displays the front checkpoint for its remaining msLeft,
+    // pausing and saving remaining time when checkpointsPaused becomes true.
+    useEffect(() => {
+        if (checkpoints.length === 0 || checkpointsPaused) return;
 
-            <div className="flex h-full flex-col-reverse overflow-hidden">
-                {messages
-                    .filter((message) => message.content.html.length > 0)
-                    .map((message) => (
-                        <DiscordMessage key={message.id} message={message} />
-                    ))}
-            </div>
-        </div>
-    ) : (
-        <div className="text-center text-2xl">Start chatting in Discord!</div>
+        const current = checkpoints[0];
+
+        startTimeRef.current = performance.now();
+        const timer = setTimeout(() => {
+            // Checkpoint fully displayed — remove it from the queue
+            setCheckpoints((prev) => prev.slice(1));
+        }, current.msLeft);
+
+        return () => {
+            clearTimeout(timer);
+            // Save the remaining display time for the current checkpoint
+            const elapsed = performance.now() - startTimeRef.current;
+            const remaining = current.msLeft - elapsed;
+            setCheckpoints((prev) => {
+                if (
+                    prev.length === 0 ||
+                    prev[0].message.id !== current.message.id
+                ) {
+                    return prev;
+                }
+                const [head, ...tail] = prev;
+                // If the remaining time is less than 5 seconds, it'll look
+                // too choppy to show the checkpoint and then immediately hide
+                // it, so we just count it as done.
+                if (remaining < 5000) {
+                    return tail;
+                }
+                return [{ ...head, msLeft: remaining }, ...tail];
+            });
+        };
+    }, [checkpoints, checkpointsPaused]);
+
+    return (
+        <>
+            {messages.length > 0 ? (
+                <div className="h-full text-2xl">
+                    {/* Overlay a translucent gradient to make messages "fade out" towards top */}
+                    <div
+                        className="pointer-events-none absolute top-0 z-10 h-30 w-full"
+                        style={{
+                            backgroundImage:
+                                "linear-gradient(to bottom, #000000aa, #00000000)",
+                        }}
+                        aria-hidden
+                    />
+
+                    <div className="flex h-full flex-col-reverse overflow-hidden">
+                        {messages
+                            .filter(
+                                (message) => message.content.html.length > 0,
+                            )
+                            .map((message) => (
+                                <DiscordMessage
+                                    key={message.id}
+                                    message={message}
+                                />
+                            ))}
+                    </div>
+                </div>
+            ) : (
+                <div className="text-center text-2xl">
+                    Start chatting in Discord!
+                </div>
+            )}
+
+            <Overlay
+                open={checkpoints.length > 0 && !checkpointsPaused}
+                className="p-0"
+                color="#00ff00"
+            >
+                {checkpoints.length > 0 && (
+                    <CheckpointOverlayContent
+                        message={checkpoints[0].message}
+                    />
+                )}
+            </Overlay>
+        </>
     );
 };
 
@@ -153,5 +242,106 @@ const DiscordMessage: FC<{ message: DiscordMessage }> = ({ message }) => {
                 dangerouslySetInnerHTML={{ __html: message.content.html }}
             />
         </motion.div>
+    );
+};
+
+function isVideoUrl(url: string): boolean {
+    return /\.(mp4|webm|mov|ogg)(\?|$)/i.test(url);
+}
+
+const CheckpointOverlayContent: FC<{ message: DiscordMessage }> = ({
+    message,
+}) => {
+    const hasText = message.content.html.length > 0;
+    const visibleAttachments = message.attachments.slice(0, 3);
+    const hasAttachments = visibleAttachments.length > 0;
+
+    const time = message.timestamp.toLocaleTimeString(undefined, {
+        hour: "numeric",
+        minute: "2-digit",
+    });
+
+    return (
+        <div className="relative size-full p-8">
+            <div className="flex size-full flex-col justify-between gap-8 border border-[#0f0] bg-black p-8">
+                {/* Header */}
+                <div className="flex items-center justify-between gap-8">
+                    <h1 className="font-silkscreen text-ph-yellow shrink-0 text-7xl leading-none tracking-tighter">
+                        Checkpoint!
+                    </h1>
+                    <div className="font-inconsolata flex min-w-0 items-center gap-4 text-4xl font-bold">
+                        {message.author.avatarHash && (
+                            <DiscordUserAvatar
+                                userId={message.author.id}
+                                displayName={message.author.name}
+                                avatarHash={message.author.avatarHash}
+                                size={64}
+                                className="size-16 shrink-0"
+                            />
+                        )}
+                        <div className="flex min-w-0 flex-col">
+                            <span className="truncate">
+                                {message.author.name}
+                            </span>
+                            <span className="text-foreground/50 text-2xl font-normal">
+                                {time}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Text */}
+                {hasText && (
+                    <div
+                        className={cn(
+                            "discord-text font-polysans text-3xl leading-snug",
+                            hasAttachments && "line-clamp-5",
+                        )}
+                        dangerouslySetInnerHTML={{
+                            __html: message.content.html,
+                        }}
+                    />
+                )}
+
+                {/* Attachments */}
+                {hasAttachments && (
+                    <div className="flex items-center gap-4 overflow-hidden">
+                        {visibleAttachments.map((url, i) =>
+                            isVideoUrl(url) ? (
+                                <video
+                                    key={i}
+                                    src={url}
+                                    autoPlay
+                                    muted
+                                    loop
+                                    playsInline
+                                    className="max-h-full min-h-0 w-auto min-w-0 rounded object-scale-down object-top"
+                                />
+                            ) : (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                    key={i}
+                                    src={url}
+                                    className="max-h-full min-h-0 w-auto min-w-0 rounded object-scale-down object-top"
+                                    alt=""
+                                />
+                            ),
+                        )}
+                    </div>
+                )}
+
+                {/* Empty div for flexbox justification */}
+                {(!hasAttachments || !hasText) && <div></div>}
+
+                {/* Lightning clock */}
+                <LightningClock
+                    containerProps={{
+                        className:
+                            "absolute right-0 bottom-0 flex gap-4 h-8 items-center px-4 text-base font-bold drop-shadow-md drop-shadow-black",
+                    }}
+                    lightningTimeProps={{ className: "text-foreground" }}
+                />
+            </div>
+        </div>
     );
 };

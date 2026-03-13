@@ -29,11 +29,11 @@ export const ToastNotification: FC<Props> = ({
     open,
     ...props
 }) => {
-    const { notificationsPaused } = useCoordinator();
+    const { allPopupsPaused } = useCoordinator();
     return (
         <Toast.Root
             {...props}
-            open={open && !notificationsPaused}
+            open={open && !allPopupsPaused}
             className={cn(...defaultClasses, className)}
         >
             <div className="mb-2 flex flex-row items-start justify-between gap-8">

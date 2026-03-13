@@ -57,7 +57,8 @@ function getSessionTimeRange(): { since: Date; until: Date } {
 }
 
 export const SessionAnnouncer: FC = () => {
-    const { notificationsPaused } = useCoordinator();
+    const { allPopupsPaused, pauseCheckpoints, unpauseCheckpoints } =
+        useCoordinator();
     const [now, setNow] = useState<number>();
 
     // Fetch session data
@@ -93,9 +94,18 @@ export const SessionAnnouncer: FC = () => {
                   );
               });
 
+    // Pause checkpoints announcements while session announcement is up
+    useEffect(() => {
+        if (activeSession) {
+            pauseCheckpoints();
+        } else {
+            unpauseCheckpoints();
+        }
+    }, [activeSession, pauseCheckpoints, unpauseCheckpoints]);
+
     return (
         <Overlay
-            open={activeSession !== undefined && !notificationsPaused}
+            open={activeSession !== undefined && !allPopupsPaused}
             className="p-0"
         >
             {activeSession && (
@@ -109,7 +119,6 @@ function timerText(sessionDate: string, now: number): string {
     const start = new Date(sessionDate).getTime();
     if (start <= now) return "starting now";
     const msLeft = start - now;
-    console.log({ msLeft });
     const minutesLeft = Math.floor(msLeft / AS_MS.minute);
     const secondsLeft = Math.floor(msLeft / AS_MS.second);
     const selected = minutesLeft > 0 ? minutesLeft : secondsLeft;
