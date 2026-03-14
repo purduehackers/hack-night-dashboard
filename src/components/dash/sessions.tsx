@@ -149,12 +149,8 @@ export const SessionOverlayContent: FC<{
     return (
         <div className="relative size-full p-16">
             <div className="border-ph-purple flex size-full flex-col justify-between gap-8 border bg-black p-8">
-                <h1 className="font-silkscreen text-ph-yellow text-[9rem] leading-[0.85]">
-                    {session.title.split("").map((c, i) => (
-                        <span key={i} className="-mx-[0.07em]">
-                            {c}
-                        </span>
-                    ))}
+                <h1 className="font-pixel text-ph-yellow text-[9rem] leading-[0.85]">
+                    {session.title}
                 </h1>
 
                 {/* Description & images */}

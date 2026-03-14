@@ -266,7 +266,7 @@ const CheckpointOverlayContent: FC<{ message: DiscordMessage }> = ({
             <div className="flex size-full flex-col justify-between gap-8 border border-[#0f0] bg-black p-8">
                 {/* Header */}
                 <div className="flex items-center justify-between gap-8">
-                    <h1 className="font-silkscreen text-ph-yellow shrink-0 text-7xl leading-none tracking-tighter">
+                    <h1 className="font-pixel text-ph-yellow shrink-0 text-7xl leading-none">
                         Checkpoint!
                     </h1>
                     <div className="font-inconsolata flex min-w-0 items-center gap-4 text-4xl font-bold">

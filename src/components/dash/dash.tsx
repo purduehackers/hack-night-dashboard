@@ -58,13 +58,13 @@ const TitleSection: FC = async () => {
                 <div className="me-16 flex h-full items-center">
                     <GliderFlat className="mt-5 block size-54" />
                 </div>
-                <h1 className="font-silkscreen text-9xl font-normal">
+                <h1 className="font-pixel text-9xl font-normal uppercase">
                     <span>
                         <i className="me-2">H</i>ack
                     </span>
                     <br />
                     <span>
-                        N<i className="relative -left-1.5">i</i>ght
+                        N<i className="relative me-3">i</i>ght
                     </span>
                 </h1>
                 <div className="text-ph-yellow font-inconsolata col-2 ms-4 mt-4 text-4xl font-bold">

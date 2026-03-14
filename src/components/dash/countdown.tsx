@@ -114,7 +114,7 @@ const Announcement: FC<{ open: boolean }> = ({ open }) => {
         // #fb2c36 = red-500
         <Overlay open={open} color="#fb2c36">
             <div className="text-foreground relative flex size-full h-full flex-col items-center justify-evenly px-16 py-8 text-center">
-                <h1 className="font-silkscreen text-9xl leading-tight tracking-tighter drop-shadow-lg drop-shadow-black">
+                <h1 className="font-pixel text-9xl leading-tight drop-shadow-lg drop-shadow-black">
                     Countdown time!
                 </h1>
                 <LightningClock
