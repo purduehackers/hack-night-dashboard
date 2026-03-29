@@ -11,6 +11,7 @@ import { useCoordinator } from "./coordinator";
 import { Overlay } from "../ui/overlay";
 import { LightningClock } from "./clock";
 import { cn } from "@/lib/utils";
+import { useSound } from "@/lib/sound";
 
 const DISCORD_FEED_WS_URL = "wss://api.purduehackers.com/discord/dashboard";
 
@@ -57,6 +58,7 @@ export const DiscordFeed: FC = () => {
     const wsRef = useRef<ReconnectingWebSocket>(null);
     const startTimeRef = useRef<number>(0);
     const { checkpointsPaused } = useCoordinator();
+    const gongSound = useSound("/gong.mp3");
 
     useEffect(() => {
         const ws = new ReconnectingWebSocket(DISCORD_FEED_WS_URL);
@@ -126,14 +128,17 @@ export const DiscordFeed: FC = () => {
         startTimeRef.current = performance.now();
         const timer = setTimeout(() => {
             // Checkpoint fully displayed — remove it from the queue
+            gongSound.pause();
             setCheckpoints((prev) => prev.slice(1));
         }, current.msLeft);
+        gongSound.play();
 
         return () => {
             clearTimeout(timer);
             // Save the remaining display time for the current checkpoint
             const elapsed = performance.now() - startTimeRef.current;
             const remaining = current.msLeft - elapsed;
+            gongSound.pause();
             setCheckpoints((prev) => {
                 if (
                     prev.length === 0 ||
@@ -151,7 +156,7 @@ export const DiscordFeed: FC = () => {
                 return [{ ...head, msLeft: remaining }, ...tail];
             });
         };
-    }, [checkpoints, checkpointsPaused]);
+    }, [checkpoints, checkpointsPaused, gongSound]);
 
     return (
         <>
@@ -267,7 +272,7 @@ const CheckpointOverlayContent: FC<{ message: DiscordMessage }> = ({
                 {/* Header */}
                 <div className="flex items-center justify-between gap-8">
                     <h1 className="font-pixel text-ph-yellow shrink-0 text-7xl leading-none">
-                        Checkpoint!
+                        Checkpoint! 🏁
                     </h1>
                     <div className="font-inconsolata flex min-w-0 items-center gap-4 text-4xl font-bold">
                         {message.author.avatarHash && (

@@ -1,3 +1,4 @@
+import { captureException } from "@sentry/nextjs";
 import { useCallback, useEffect, useRef } from "react";
 
 interface UseSoundOptions {
@@ -31,10 +32,11 @@ export function useSound(src: string, opts: UseSoundOptions = {}) {
             if (rewind && audioRef.current) {
                 audioRef.current.currentTime = 0;
             }
-            return audioRef.current
-                ?.play()
-                .catch((error) => console.error("Error playing sound", error));
-        }, [rewind]),
+            return audioRef.current?.play().catch((error) => {
+                captureException(error, { extra: { audioSrc: src } });
+                console.error("Error playing sound", error);
+            });
+        }, [rewind, src]),
         pause: useCallback(() => audioRef.current?.pause(), []),
     };
 }
