@@ -12,6 +12,7 @@ import { GliderFlat, PixelClock } from "@/components/icons";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { useSound } from "@/lib/sound";
+import { Media } from "@/lib/payload-types";
 
 const AS_MS = {
     second: 1000,
@@ -135,7 +136,10 @@ export const SessionOverlayContent: FC<{
     session: HydratedSession;
     now: number;
 }> = ({ session, now }) => {
-    // const images = [...session.images!, ...session.images!];
+    const images = (session.images ?? []).filter(
+        (image) =>
+            image.id && typeof image.image === "object" && image.image.url,
+    );
     const hasDiscord = session.host.discordName !== undefined;
     const namesSame =
         hasDiscord &&
@@ -169,12 +173,24 @@ export const SessionOverlayContent: FC<{
 
                     <div
                         className={cn(
-                            "flex flex-1 items-center justify-evenly gap-8",
-                            // images.length > 1 ? "flex-2" : "flex-1",
+                            "flex items-center justify-evenly gap-8",
+                            images.length > 1 ? "flex-2" : "flex-1",
                         )}
                     >
-                        {/* FIXME: display images from CMS */}
-                        <GliderFlat className="block h-40" width={undefined} />
+                        {images.length > 0 ? (
+                            images.map((image) => (
+                                <SessionImage
+                                    key={image.id}
+                                    image={image}
+                                    className="min-w-0 flex-1"
+                                />
+                            ))
+                        ) : (
+                            <GliderFlat
+                                className="block h-40"
+                                width={undefined}
+                            />
+                        )}
                     </div>
                 </div>
 
