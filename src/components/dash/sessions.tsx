@@ -11,6 +11,7 @@ import { DiscordUserMention } from "@/components/ui/discord";
 import { GliderFlat, PixelClock } from "@/components/icons";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { useSound } from "@/lib/sound";
 
 const AS_MS = {
     second: 1000,
@@ -60,6 +61,7 @@ export const SessionAnnouncer: FC = () => {
     const { allPopupsPaused, pauseCheckpoints, unpauseCheckpoints } =
         useCoordinator();
     const [now, setNow] = useState<number>();
+    const pipeSound = useSound("/pipe.mp3");
 
     // Fetch session data
     const { since, until } = getSessionTimeRange();
@@ -97,10 +99,12 @@ export const SessionAnnouncer: FC = () => {
     useEffect(() => {
         if (activeSession) {
             pauseCheckpoints();
+            pipeSound.play();
         } else {
             unpauseCheckpoints();
+            pipeSound.pause();
         }
-    }, [activeSession, pauseCheckpoints, unpauseCheckpoints]);
+    }, [activeSession, pauseCheckpoints, unpauseCheckpoints, pipeSound]);
 
     return (
         <Overlay

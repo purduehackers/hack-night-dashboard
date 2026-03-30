@@ -7,15 +7,15 @@ import { useSound } from "@/lib/sound";
 
 export const DoorbellButton: FC = () => {
     const { ringing, setRinging, connectionState } = useDoorbell();
-    const { play: playSound, pause: pauseSound } = useSound("/doorbell.mp3");
+    const bellSound = useSound("/doorbell.mp3");
 
     useEffect(() => {
         if (ringing) {
-            playSound();
+            bellSound.play();
         } else {
-            pauseSound();
+            bellSound.pause();
         }
-    }, [ringing, playSound, pauseSound]);
+    }, [ringing, bellSound]);
 
     return (
         <button
