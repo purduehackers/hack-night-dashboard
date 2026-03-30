@@ -12,7 +12,6 @@ export default function Page() {
     const [now, setNow] = useState<number>(0);
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setNow(Date.now());
         const timer = setInterval(() => setNow(Date.now()), 1000);
         return () => {

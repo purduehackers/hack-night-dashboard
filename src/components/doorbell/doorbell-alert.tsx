@@ -16,7 +16,6 @@ export const DoorbellAlert: FC<Props> = ({
     useEffect(() => {
         if (!isOpen) return;
 
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSecondsLeft(initialSecondsLeft);
 
         const timer = window.setInterval(() => {
@@ -40,7 +39,6 @@ export const DoorbellAlert: FC<Props> = ({
             // We must set secondsLeft to be non-zero here. Otherwise, when the
             // notification is displayed the next time, the if condition will be
             // true and the notification will self-destruct.
-            // eslint-disable-next-line react-hooks/set-state-in-effect
             setSecondsLeft(initialSecondsLeft);
         }
     }, [isOpen, secondsLeft, onClose, initialSecondsLeft]);

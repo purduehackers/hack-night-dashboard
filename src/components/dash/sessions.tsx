@@ -69,7 +69,6 @@ export const SessionAnnouncer: FC = () => {
 
     // Update `now` every second
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setNow(Date.now());
         const timer = window.setInterval(
             () => setNow(Date.now()),

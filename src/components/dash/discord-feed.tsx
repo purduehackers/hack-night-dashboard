@@ -45,19 +45,20 @@ const discordMessageSchema = z.object({
 });
 type DiscordMessage = z.infer<typeof discordMessageSchema>;
 
-interface Checkpoint {
-    message: DiscordMessage;
-    msLeft: number;
-}
-
 export const DiscordFeed: FC = () => {
     // Messages are ordered new to old
     const [messages, setMessages] = useState<DiscordMessage[]>([]);
-    // Order for checkpoints is old to new
-    const [checkpoints, setCheckpoints] = useState<Checkpoint[]>([]);
+    // currentCheckpoint is the message being shown; checkpointQueue holds waiting messages
+    const [currentCheckpoint, setCurrentCheckpoint] =
+        useState<DiscordMessage | null>(null);
+    const [checkpointQueue, setCheckpointQueue] = useState<DiscordMessage[]>(
+        [],
+    );
     const wsRef = useRef<ReconnectingWebSocket>(null);
     const startTimeRef = useRef<number>(0);
-    const { checkpointsPaused } = useCoordinator();
+    const msLeftRef = useRef<number>(CHECKPOINTS_DISPLAY_DURATION_MS);
+    const { checkpointsPaused, pauseCheckpoints, unpauseCheckpoints } =
+        useCoordinator();
     const gongSound = useSound("/gong.mp3");
 
     useEffect(() => {
@@ -97,11 +98,7 @@ export const DiscordFeed: FC = () => {
                 const message = discordMessageSchema.parse(JSON.parse(ev.data));
                 setMessages((prev) => [message, ...prev.slice(0, 100)]);
                 if (message.channel.id === CHECKPOINTS_CHANNEL_ID) {
-                    const checkpoint: Checkpoint = {
-                        message,
-                        msLeft: CHECKPOINTS_DISPLAY_DURATION_MS,
-                    };
-                    setCheckpoints((prev) => [...prev, checkpoint]);
+                    setCheckpointQueue((prev) => [...prev, message]);
                 }
             } catch (error) {
                 captureException(error, {
@@ -118,45 +115,60 @@ export const DiscordFeed: FC = () => {
         };
     }, []);
 
-    // Timer effect: displays the front checkpoint for its remaining msLeft,
+    // Promotion effect: when nothing is displayed and the queue has items, promote the next one.
+    useEffect(() => {
+        if (currentCheckpoint === null && checkpointQueue.length > 0) {
+            const [next, ...rest] = checkpointQueue;
+            msLeftRef.current = CHECKPOINTS_DISPLAY_DURATION_MS;
+            setCurrentCheckpoint(next);
+            setCheckpointQueue(rest);
+        }
+    }, [currentCheckpoint, checkpointQueue]);
+
+    // Timer effect: displays the current checkpoint for its remaining time,
     // pausing and saving remaining time when checkpointsPaused becomes true.
     useEffect(() => {
-        if (checkpoints.length === 0 || checkpointsPaused) return;
-
-        const current = checkpoints[0];
+        if (currentCheckpoint === null || checkpointsPaused) return;
 
         startTimeRef.current = performance.now();
         const timer = setTimeout(() => {
-            // Checkpoint fully displayed — remove it from the queue
+            // Checkpoint fully displayed — clear it (promotion effect will pick up the next one)
             gongSound.pause();
-            setCheckpoints((prev) => prev.slice(1));
-        }, current.msLeft);
-        gongSound.play();
+            msLeftRef.current = CHECKPOINTS_DISPLAY_DURATION_MS;
+            setCurrentCheckpoint(null);
+        }, msLeftRef.current);
+        // Only play the gong sound if this is the first time this checkpoint is
+        // being displayed.
+        if (msLeftRef.current == CHECKPOINTS_DISPLAY_DURATION_MS) {
+            gongSound.play();
+        }
 
         return () => {
             clearTimeout(timer);
             // Save the remaining display time for the current checkpoint
             const elapsed = performance.now() - startTimeRef.current;
-            const remaining = current.msLeft - elapsed;
+            const remaining = msLeftRef.current - elapsed;
             gongSound.pause();
-            setCheckpoints((prev) => {
-                if (
-                    prev.length === 0 ||
-                    prev[0].message.id !== current.message.id
-                ) {
-                    return prev;
-                }
-                const [head, ...tail] = prev;
-                // If the remaining time is less than 5 seconds, it'll look
-                // too choppy to show the checkpoint and then immediately hide
-                // it, so we just count it as done.
-                if (remaining < 5000) {
-                    return tail;
-                }
-                return [{ ...head, msLeft: remaining }, ...tail];
-            });
+            // If the remaining time is less than 5 seconds, it'll look
+            // too choppy to show the checkpoint and then immediately hide
+            // it, so we just count it as done.
+            if (remaining < 5000) {
+                // Wait 2 seconds in between individual checkpoints
+                pauseCheckpoints();
+                setTimeout(unpauseCheckpoints, 2000);
+                msLeftRef.current = CHECKPOINTS_DISPLAY_DURATION_MS;
+                setCurrentCheckpoint(null);
+            } else {
+                msLeftRef.current = remaining;
+            }
         };
-    }, [checkpoints, checkpointsPaused, gongSound]);
+    }, [
+        currentCheckpoint,
+        checkpointsPaused,
+        gongSound,
+        pauseCheckpoints,
+        unpauseCheckpoints,
+    ]);
 
     return (
         <>
@@ -192,14 +204,12 @@ export const DiscordFeed: FC = () => {
             )}
 
             <Overlay
-                open={checkpoints.length > 0 && !checkpointsPaused}
+                open={currentCheckpoint !== null && !checkpointsPaused}
                 className="p-0"
                 color="#00ff00"
             >
-                {checkpoints.length > 0 && (
-                    <CheckpointOverlayContent
-                        message={checkpoints[0].message}
-                    />
+                {currentCheckpoint && (
+                    <CheckpointOverlayContent message={currentCheckpoint} />
                 )}
             </Overlay>
         </>

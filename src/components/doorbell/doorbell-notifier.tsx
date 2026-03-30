@@ -34,7 +34,6 @@ export const DoorbellNotifier: FC<DoorbellNotifierProps> = ({ maintainer }) => {
     // content of the notification already depends on the connection state, so
     // all we need to do is set it to be visible.
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setNotificationVisible(true);
     }, [connectionState]);
 
@@ -44,7 +43,6 @@ export const DoorbellNotifier: FC<DoorbellNotifierProps> = ({ maintainer }) => {
             // 1. play the sound
             // 2. show an alert that disappears in 20 seconds
             playSound();
-            // eslint-disable-next-line react-hooks/set-state-in-effect
             setAlertOpen(true);
         } else if (!ringing && alertOpen) {
             // When any dashboard dismisses the doorbell, dismiss it on this
