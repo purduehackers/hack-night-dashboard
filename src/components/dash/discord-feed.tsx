@@ -222,6 +222,11 @@ const DiscordMessage: FC<{ message: DiscordMessage }> = ({ message }) => {
         minute: "2-digit",
         second: undefined,
     });
+
+    const attachments = message.attachments.filter(
+        (url) => isPhotoUrl(url) || isVideoUrl(url),
+    );
+
     return (
         <motion.div
             layout
@@ -252,16 +257,53 @@ const DiscordMessage: FC<{ message: DiscordMessage }> = ({ message }) => {
                     {time}
                 </div>
             </div>
-            <div
-                className="discord-text font-polysans line-clamp-3 text-2xl leading-tight text-ellipsis"
-                dangerouslySetInnerHTML={{ __html: message.content.html }}
-            />
+            {message.content.markdown.trim().length > 0 && (
+                <div
+                    className="discord-text font-polysans line-clamp-3 text-2xl leading-tight text-ellipsis"
+                    dangerouslySetInnerHTML={{ __html: message.content.html }}
+                />
+            )}
+            {attachments.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                    {attachments.map((url, i) => {
+                        const className =
+                            "max-h-30 h-full max-w-full rounded-sm";
+                        if (isVideoUrl(url)) {
+                            return (
+                                <video
+                                    key={i}
+                                    src={url}
+                                    className={className}
+                                    autoPlay
+                                    muted
+                                    loop
+                                    controls={false}
+                                ></video>
+                            );
+                        } else if (isPhotoUrl(url)) {
+                            return (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                    key={i}
+                                    src={url}
+                                    alt=""
+                                    className={className}
+                                ></img>
+                            );
+                        }
+                    })}
+                </div>
+            )}
         </motion.div>
     );
 };
 
 function isVideoUrl(url: string): boolean {
     return /\.(mp4|webm|mov|ogg)(\?|$)/i.test(url);
+}
+
+function isPhotoUrl(url: string): boolean {
+    return /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(url);
 }
 
 const CheckpointOverlayContent: FC<{ message: DiscordMessage }> = ({
