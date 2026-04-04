@@ -94,6 +94,7 @@ export const DoorbellProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
         };
 
         ws.current.onerror = (event) => {
+            if (!event.error) return;
             if (event.error.message === "TIMEOUT") {
                 Sentry.addBreadcrumb({
                     category: "doorbell.websocket",
@@ -101,7 +102,7 @@ export const DoorbellProvider: FC<PropsWithChildren<{}>> = ({ children }) => {
                     data: { url: WS_URL },
                 });
                 setConnectionState(ConnectionState.Connecting);
-            } else if (event.error) {
+            } else {
                 Sentry.captureException(event.error, {
                     tags: { url: WS_URL },
                 });
