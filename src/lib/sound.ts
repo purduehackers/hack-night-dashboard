@@ -32,6 +32,13 @@ export function useSound(src: string, opts: UseSoundOptions = {}) {
             audioRef.current.currentTime = 0;
         }
         return audioRef.current?.play().catch((error) => {
+            if (
+                error instanceof DOMException &&
+                error.name === "NotAllowedError"
+            ) {
+                // Can't play because the page hasn't been interacted with yet
+                return;
+            }
             captureException(error, { extra: { audioSrc: src } });
             console.error("Error playing sound", error);
         });
