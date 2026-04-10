@@ -4,7 +4,7 @@ import { GliderFlat } from "@/components/icons";
 import { DoorbellProvider } from "@/components/doorbell/doorbell-context";
 import { DoorbellNotifier } from "@/components/doorbell/doorbell-notifier";
 import { NotificationProvider } from "@/components/ui/notification-provider";
-import { ActivatePopup } from "./activate-popup";
+// import { ActivatePopup } from "./activate-popup";
 import { DitheredSoup } from "@/components/dithered-soup";
 import { Countdown } from "./countdown";
 import { Coordinator } from "./coordinator";
@@ -18,7 +18,7 @@ const { version, maintainer } = await getConfigs("version", "maintainer");
 export const Dash: FC = () => (
     <Coordinator>
         <NotificationProvider>
-            <ActivatePopup />
+            {/*<ActivatePopup />*/}
             <SessionAnnouncer />
             <Countdown />
             <ScreenyNoSleepy />
