@@ -16,22 +16,26 @@ const GUILD_ID = process.env.DISCORD_GUILD_ID ?? "772576325897945119";
 const SESSION_CACHE_TTL_SECONDS = 60;
 const DISCORD_CACHE_TTL_SECONDS = 3600; // 1 hour
 
-function logAndReturnError(response: Response) {
+async function logAndReturnError(response: Response) {
     const error = new Error(
         `Failed to fetch guild member: Discord API returned ${response.status} response`,
     );
     Sentry.captureException(error, {
-        contexts: {
-            response: {
-                type: response.type,
-                status_code: response.status,
-                headers: response.headers as unknown as Record<string, string>,
-            },
+        extra: {
+            responseType: response.type,
+            responseStatus: response.status,
+            responseHeaders: response.headers,
+            responseBody: await response.text(),
         },
     });
     return error;
 }
 
+/**
+ * Gets information about a guild member from the Discord API.
+ * @param id the ID of the user to look up
+ * @returns the guild member object, or null if an error occurred
+ */
 async function fetchGuildMember(
     id: string,
 ): Promise<RESTGetAPIGuildMemberResult | null> {
@@ -48,11 +52,10 @@ async function fetchGuildMember(
         },
     );
     if (!response.ok) {
-        if (response.status === 404) {
-            return null;
-        } else {
-            throw logAndReturnError(response);
+        if (response.status !== 404) {
+            logAndReturnError(response);
         }
+        return null;
     }
     const data = (await response.json()) as RESTGetAPIGuildMemberResult;
     return data;
