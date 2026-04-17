@@ -15,12 +15,12 @@ import { useSound } from "@/lib/sound";
 
 const DISCORD_FEED_WS_URL = "wss://api.purduehackers.com/discord/dashboard";
 
-const CHECKPOINTS_CHANNEL_ID =
-    process.env.NODE_ENV === "development"
-        ? "1479527770483593266" // thread in #bot-dump
-        : "1052236377338683514"; // #checkpoints
-
+const CHECKPOINTS_CHANNEL_IDS = new Set([
+    "1479527770483593266", // thread in #bot-dump
+    "1052236377338683514", // #checkpoints
+]);
 /**
+
  * Amount of time for which each #checkpoints message will be presented.
  */
 const CHECKPOINTS_DISPLAY_DURATION_MS = 30000;
@@ -97,7 +97,7 @@ export const DiscordFeed: FC = () => {
             try {
                 const message = discordMessageSchema.parse(JSON.parse(ev.data));
                 setMessages((prev) => [message, ...prev.slice(0, 100)]);
-                if (message.channel.id === CHECKPOINTS_CHANNEL_ID) {
+                if (CHECKPOINTS_CHANNEL_IDS.has(message.channel.id)) {
                     setCheckpointQueue((prev) => [...prev, message]);
                 }
             } catch (error) {
