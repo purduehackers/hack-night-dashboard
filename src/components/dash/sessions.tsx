@@ -66,9 +66,13 @@ export const SessionAnnouncer: FC = () => {
 
     // Fetch session data
     const { since, until } = getSessionTimeRange();
-    const { data } = useSWR(["/api/sessions", since, until], fetcher, {
-        refreshInterval: 60_000, // 1 minute
-    });
+    const { data } = useSWR(
+        ["/api/hack-night-sessions", since, until],
+        fetcher,
+        {
+            refreshInterval: 60_000, // 1 minute
+        },
+    );
 
     // Update `now` every second
     useEffect(() => {
