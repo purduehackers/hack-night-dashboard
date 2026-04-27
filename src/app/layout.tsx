@@ -45,7 +45,7 @@ export const generateMetadata = async (): Promise<Metadata> => {
     return {
         title,
         description,
-        icons: "/glider-flat.svg",
+        icons: "/glider.svg",
         openGraph: {
             type: "website",
             url: "https://night.purduehackers.com",
