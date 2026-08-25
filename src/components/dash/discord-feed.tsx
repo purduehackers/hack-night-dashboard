@@ -56,6 +56,10 @@ export const DiscordFeed: FC = () => {
         [],
     );
     const wsRef = useRef<ReconnectingWebSocket>(null);
+    // The server replays the last 20 messages on every (re)connect, so
+    // frames can repeat across reconnects. Track delivered ids to keep
+    // the feed and the checkpoint queue free of duplicates.
+    const seenIdsRef = useRef<Set<string>>(new Set());
     const startTimeRef = useRef<number>(0);
     const msLeftRef = useRef<number>(CHECKPOINTS_DISPLAY_DURATION_MS);
     const { checkpointsPaused, pauseCheckpoints, unpauseCheckpoints } =
@@ -97,6 +101,8 @@ export const DiscordFeed: FC = () => {
         ws.addEventListener("message", (ev) => {
             try {
                 const message = discordMessageSchema.parse(JSON.parse(ev.data));
+                if (seenIdsRef.current.has(message.id)) return;
+                seenIdsRef.current.add(message.id);
                 setMessages((prev) => [message, ...prev.slice(0, 100)]);
                 if (CHECKPOINTS_CHANNEL_IDS.has(message.channel.id)) {
                     setCheckpointQueue((prev) => [...prev, message]);
