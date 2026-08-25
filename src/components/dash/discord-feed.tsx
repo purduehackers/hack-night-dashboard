@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import { useSound } from "@/lib/sound";
 
 const DISCORD_FEED_WS_URL =
-    "wss://api-v4-purdue-hackers.vercel.app/discord/dashboard";
+    "wss://api.purduehackers.com/discord/dashboard";
 
 const CHECKPOINTS_CHANNEL_IDS = new Set([
     "1479527770483593266", // thread in #bot-dump
