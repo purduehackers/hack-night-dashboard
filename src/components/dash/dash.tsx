@@ -68,7 +68,7 @@ const TitleSection: FC = async () => {
                     </span>
                 </h1>
                 <div className="text-ph-yellow font-inconsolata col-2 ms-4 mt-4 text-4xl font-bold">
-                    {version}
+                    v{version}
                 </div>
             </div>
         </div>
