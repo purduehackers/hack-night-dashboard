@@ -105,7 +105,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const query = stringify(upstreamParams);
     let response;
     try {
-        response = await fetch(`${PAYLOAD_URL}/api/sessions?${query}`, {
+        response = await fetch(`${PAYLOAD_URL}/api/hack-night-sessions?${query}`, {
             headers: {
                 Authorization: `service-accounts API-Key ${process.env.PAYLOAD_API_KEY}`,
             },
