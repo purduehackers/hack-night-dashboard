@@ -13,8 +13,7 @@ import { LightningClock } from "./clock";
 import { cn } from "@/lib/utils";
 import { useSound } from "@/lib/sound";
 
-const DISCORD_FEED_WS_URL =
-    "wss://api.purduehackers.com/discord/dashboard";
+const DISCORD_FEED_WS_URL = "wss://api.purduehackers.com/discord/dashboard";
 
 const CHECKPOINTS_CHANNEL_IDS = new Set([
     "1479527770483593266", // thread in #bot-dump
@@ -47,6 +46,7 @@ const discordMessageSchema = z.object({
 type DiscordMessage = z.infer<typeof discordMessageSchema>;
 
 export const DiscordFeed: FC = () => {
+    const [chatSide, setChatSide] = useState<"left" | "right">("right");
     // Messages are ordered new to old
     const [messages, setMessages] = useState<DiscordMessage[]>([]);
     // currentCheckpoint is the message being shown; checkpointQueue holds waiting messages
@@ -104,6 +104,14 @@ export const DiscordFeed: FC = () => {
                 if (seenIdsRef.current.has(message.id)) return;
                 seenIdsRef.current.add(message.id);
                 setMessages((prev) => [message, ...prev.slice(0, 100)]);
+                // If both directions appear, the last word wins.
+                const directions =
+                    message.content.markdown.match(/\b(left|right)\b/gi);
+                const direction =
+                    directions?.[directions.length - 1].toLowerCase();
+                if (direction === "left" || direction === "right") {
+                    setChatSide(direction);
+                }
                 if (CHECKPOINTS_CHANNEL_IDS.has(message.channel.id)) {
                     setCheckpointQueue((prev) => [...prev, message]);
                 }
@@ -178,7 +186,12 @@ export const DiscordFeed: FC = () => {
     ]);
 
     return (
-        <>
+        <div
+            className={cn(
+                "border-ph-purple relative flex-1 overflow-hidden border p-8",
+                chatSide === "left" ? "order-first border-r-0" : "border-l-0",
+            )}
+        >
             {messages.length > 0 ? (
                 <div className="h-full text-2xl">
                     {/* Overlay a translucent gradient to make messages "fade out" towards top */}
@@ -219,7 +232,7 @@ export const DiscordFeed: FC = () => {
                     <CheckpointOverlayContent message={currentCheckpoint} />
                 )}
             </Overlay>
-        </>
+        </div>
     );
 };
 

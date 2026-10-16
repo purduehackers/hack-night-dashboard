@@ -41,9 +41,7 @@ export const Dash: FC = () => (
                             }}
                         />
                     </div>
-                    <div className="border-ph-purple relative flex-1 overflow-hidden border border-l-0 p-8">
-                        <DiscordFeed />
-                    </div>
+                    <DiscordFeed />
                 </div>
             </DoorbellProvider>
         </NotificationProvider>
