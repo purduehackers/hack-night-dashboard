@@ -30,7 +30,7 @@ export const Dash: FC = () => (
                         <LightningClock
                             containerProps={{
                                 className:
-                                    "flex flex-row items-end justify-between gap-16 border bg-black p-16",
+                                    "flex flex-row items-end justify-between gap-16 border bg-black px-16 py-12",
                             }}
                             lightningTimeProps={{
                                 className:
