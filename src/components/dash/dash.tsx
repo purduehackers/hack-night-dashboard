@@ -1,8 +1,8 @@
-import { getConfigs } from "@/lib/config";
+import { getConfig } from "@/lib/config";
 import { FC } from "react";
 import { GliderFlat } from "@/components/icons";
-import { DoorbellProvider } from "@/components/doorbell/doorbell-context";
-import { DoorbellNotifier } from "@/components/doorbell/doorbell-notifier";
+// import { DoorbellProvider } from "@/components/doorbell/doorbell-context";
+// import { DoorbellNotifier } from "@/components/doorbell/doorbell-notifier";
 import { NotificationProvider } from "@/components/ui/notification-provider";
 // import { ActivatePopup } from "./activate-popup";
 import { DitheredSoup } from "@/components/dithered-soup";
@@ -13,7 +13,8 @@ import { LightningClock } from "./clock";
 import { ScreenyNoSleepy } from "./waker";
 import { DiscordFeed } from "./discord-feed";
 
-const { version, maintainer } = await getConfigs("version", "maintainer");
+// const { version, maintainer } = await getConfigs("version", "maintainer");
+const version = await getConfig("version");
 
 export const Dash: FC = () => (
     <Coordinator>
@@ -22,28 +23,29 @@ export const Dash: FC = () => (
             <SessionAnnouncer />
             <Countdown />
             <ScreenyNoSleepy />
-            <DoorbellProvider>
-                <DoorbellNotifier maintainer={maintainer} />
-                <div className="relative flex h-full w-full flex-row">
-                    <div className="flex flex-2 flex-col">
-                        <TitleSection />
-                        <LightningClock
-                            containerProps={{
-                                className:
-                                    "flex flex-row items-end justify-between gap-16 border bg-black px-16 py-12",
-                            }}
-                            lightningTimeProps={{
-                                className:
-                                    "font-whyte text-8xl font-black whitespace-nowrap italic",
-                            }}
-                            normalTimeProps={{
-                                className: "text-4xl font-bold",
-                            }}
-                        />
-                    </div>
-                    <DiscordFeed />
+            {/* Doorbell integration disabled; keep the wiring for future use. */}
+            {/* <DoorbellProvider> */}
+            {/* <DoorbellNotifier maintainer={maintainer} /> */}
+            <div className="relative flex h-full w-full flex-row">
+                <div className="flex flex-2 flex-col">
+                    <TitleSection />
+                    <LightningClock
+                        containerProps={{
+                            className:
+                                "flex flex-row items-end justify-between gap-16 border bg-black px-16 py-12",
+                        }}
+                        lightningTimeProps={{
+                            className:
+                                "font-whyte text-8xl font-black whitespace-nowrap italic",
+                        }}
+                        normalTimeProps={{
+                            className: "text-4xl font-bold",
+                        }}
+                    />
                 </div>
-            </DoorbellProvider>
+                <DiscordFeed />
+            </div>
+            {/* </DoorbellProvider> */}
         </NotificationProvider>
     </Coordinator>
 );
