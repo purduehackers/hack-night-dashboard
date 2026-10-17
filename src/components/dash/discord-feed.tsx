@@ -24,6 +24,7 @@ const CHECKPOINTS_CHANNEL_IDS = new Set([
  * Amount of time for which each #checkpoints message will be presented.
  */
 const CHECKPOINTS_DISPLAY_DURATION_MS = 30000;
+const UPSIDE_DOWN_DURATION_MS = 10_000;
 
 const discordMessageSchema = z.object({
     id: z.string(),
@@ -47,6 +48,10 @@ type DiscordMessage = z.infer<typeof discordMessageSchema>;
 
 export const DiscordFeed: FC = () => {
     const [chatSide, setChatSide] = useState<"left" | "right">("right");
+    const [isUpsideDown, setIsUpsideDown] = useState(false);
+    const upsideDownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+        null,
+    );
     // Messages are ordered new to old
     const [messages, setMessages] = useState<DiscordMessage[]>([]);
     // currentCheckpoint is the message being shown; checkpointQueue holds waiting messages
@@ -112,6 +117,16 @@ export const DiscordFeed: FC = () => {
                 if (direction === "left" || direction === "right") {
                     setChatSide(direction);
                 }
+                if (/\bupside\s+down\b/i.test(message.content.markdown)) {
+                    if (upsideDownTimerRef.current !== null) {
+                        clearTimeout(upsideDownTimerRef.current);
+                    }
+                    setIsUpsideDown(true);
+                    upsideDownTimerRef.current = setTimeout(() => {
+                        setIsUpsideDown(false);
+                        upsideDownTimerRef.current = null;
+                    }, UPSIDE_DOWN_DURATION_MS);
+                }
                 if (CHECKPOINTS_CHANNEL_IDS.has(message.channel.id)) {
                     setCheckpointQueue((prev) => [...prev, message]);
                 }
@@ -125,6 +140,10 @@ export const DiscordFeed: FC = () => {
 
         wsRef.current = ws;
         return () => {
+            if (upsideDownTimerRef.current !== null) {
+                clearTimeout(upsideDownTimerRef.current);
+                upsideDownTimerRef.current = null;
+            }
             wsRef.current?.close();
             wsRef.current = null;
         };
@@ -193,7 +212,12 @@ export const DiscordFeed: FC = () => {
             )}
         >
             {messages.length > 0 ? (
-                <div className="h-full text-2xl">
+                <div
+                    className={cn(
+                        "h-full text-2xl",
+                        isUpsideDown && "rotate-180",
+                    )}
+                >
                     {/* Overlay a translucent gradient to make messages "fade out" towards top */}
                     <div
                         className="pointer-events-none absolute top-0 z-10 h-30 w-full"
