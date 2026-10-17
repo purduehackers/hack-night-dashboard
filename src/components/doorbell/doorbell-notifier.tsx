@@ -1,105 +1,106 @@
-"use client";
-
-import { FC, ReactNode, useEffect, useState } from "react";
-import {
-    useDoorbell,
-    ConnectionState,
-} from "@/components/doorbell/doorbell-context";
-import { ToastNotification } from "@/components/ui/toast-notification";
-import { Spinner } from "@/components/ui/spinner";
-import { DoorbellAlert } from "./doorbell-alert";
-import { useSound } from "@/lib/sound";
-
-const DEBOUNCE_SECONDS = 20;
-
-interface DoorbellNotifierProps {
-    maintainer: string;
-}
-export const DoorbellNotifier: FC<DoorbellNotifierProps> = ({ maintainer }) => {
-    const { ringing, connectionState, setRinging } = useDoorbell();
-    // Controls the visibility of the doorbell connection notification
-    const [notificationVisible, setNotificationVisible] = useState(false);
-    // I don't know why we use 0.85, but that's what the old dashboard used
-    const bellSound = useSound("/doorbell.mp3");
-    // Controls the visibility of the doorbell alert
-    const [alertOpen, setAlertOpen] = useState(false);
-
-    function dismissDoorbell() {
-        bellSound.pause();
-        setAlertOpen(false);
-        setRinging(false);
-    }
-
-    // Display the notification whenever the connection state changes. The
-    // content of the notification already depends on the connection state, so
-    // all we need to do is set it to be visible.
-    useEffect(() => {
-        setNotificationVisible(true);
-    }, [connectionState]);
-
-    useEffect(() => {
-        if (ringing && !alertOpen) {
-            // When someone rings the doorbell,
-            // 1. play the sound
-            // 2. show an alert that disappears in 20 seconds
-            bellSound.play();
-            setAlertOpen(true);
-        } else if (!ringing && alertOpen) {
-            // When any dashboard dismisses the doorbell, dismiss it on this
-            // one too.
-            bellSound.pause();
-            setAlertOpen(false);
-        }
-    }, [ringing, bellSound, alertOpen]);
-
-    let notification: {
-        title: string;
-        description: string;
-        durationMs?: number;
-        icon?: ReactNode;
-    };
-    switch (connectionState) {
-        case ConnectionState.Connecting:
-            notification = {
-                title: "Doorbell connecting...",
-                description: "Wiring up the doorbell",
-                icon: <Spinner />,
-            };
-            break;
-        case ConnectionState.Connected:
-            notification = {
-                title: "Doorbell connected",
-                description: "Ready to ring!",
-                durationMs: 5000,
-                icon: "🔔",
-            };
-            break;
-        case ConnectionState.Error:
-            notification = {
-                title: "Error connecting to doorbell",
-                description: `Something went wrong. Please let ${maintainer} know.`,
-                icon: "⚠️",
-            };
-            break;
-    }
-
-    return (
-        <>
-            <ToastNotification
-                key="doorbell-connection-state"
-                open={notificationVisible}
-                onOpenChange={setNotificationVisible}
-                type="background"
-                title={notification.title}
-                description={notification.description}
-                duration={notification.durationMs}
-                icon={notification.icon}
-            />
-            <DoorbellAlert
-                isOpen={alertOpen}
-                initialSecondsLeft={DEBOUNCE_SECONDS}
-                onClose={dismissDoorbell}
-            />
-        </>
-    );
-};
+// Doorbell integration disabled. Original implementation preserved below.
+// "use client";
+//
+// import { FC, ReactNode, useEffect, useState } from "react";
+// import {
+//     useDoorbell,
+//     ConnectionState,
+// } from "@/components/doorbell/doorbell-context";
+// import { ToastNotification } from "@/components/ui/toast-notification";
+// import { Spinner } from "@/components/ui/spinner";
+// import { DoorbellAlert } from "./doorbell-alert";
+// import { useSound } from "@/lib/sound";
+//
+// const DEBOUNCE_SECONDS = 20;
+//
+// interface DoorbellNotifierProps {
+//     maintainer: string;
+// }
+// export const DoorbellNotifier: FC<DoorbellNotifierProps> = ({ maintainer }) => {
+//     const { ringing, connectionState, setRinging } = useDoorbell();
+//     // Controls the visibility of the doorbell connection notification
+//     const [notificationVisible, setNotificationVisible] = useState(false);
+//     // I don't know why we use 0.85, but that's what the old dashboard used
+//     const bellSound = useSound("/doorbell.mp3");
+//     // Controls the visibility of the doorbell alert
+//     const [alertOpen, setAlertOpen] = useState(false);
+//
+//     function dismissDoorbell() {
+//         bellSound.pause();
+//         setAlertOpen(false);
+//         setRinging(false);
+//     }
+//
+//     // Display the notification whenever the connection state changes. The
+//     // content of the notification already depends on the connection state, so
+//     // all we need to do is set it to be visible.
+//     useEffect(() => {
+//         setNotificationVisible(true);
+//     }, [connectionState]);
+//
+//     useEffect(() => {
+//         if (ringing && !alertOpen) {
+//             // When someone rings the doorbell,
+//             // 1. play the sound
+//             // 2. show an alert that disappears in 20 seconds
+//             bellSound.play();
+//             setAlertOpen(true);
+//         } else if (!ringing && alertOpen) {
+//             // When any dashboard dismisses the doorbell, dismiss it on this
+//             // one too.
+//             bellSound.pause();
+//             setAlertOpen(false);
+//         }
+//     }, [ringing, bellSound, alertOpen]);
+//
+//     let notification: {
+//         title: string;
+//         description: string;
+//         durationMs?: number;
+//         icon?: ReactNode;
+//     };
+//     switch (connectionState) {
+//         case ConnectionState.Connecting:
+//             notification = {
+//                 title: "Doorbell connecting...",
+//                 description: "Wiring up the doorbell",
+//                 icon: <Spinner />,
+//             };
+//             break;
+//         case ConnectionState.Connected:
+//             notification = {
+//                 title: "Doorbell connected",
+//                 description: "Ready to ring!",
+//                 durationMs: 5000,
+//                 icon: "🔔",
+//             };
+//             break;
+//         case ConnectionState.Error:
+//             notification = {
+//                 title: "Error connecting to doorbell",
+//                 description: `Something went wrong. Please let ${maintainer} know.`,
+//                 icon: "⚠️",
+//             };
+//             break;
+//     }
+//
+//     return (
+//         <>
+//             <ToastNotification
+//                 key="doorbell-connection-state"
+//                 open={notificationVisible}
+//                 onOpenChange={setNotificationVisible}
+//                 type="background"
+//                 title={notification.title}
+//                 description={notification.description}
+//                 duration={notification.durationMs}
+//                 icon={notification.icon}
+//             />
+//             <DoorbellAlert
+//                 isOpen={alertOpen}
+//                 initialSecondsLeft={DEBOUNCE_SECONDS}
+//                 onClose={dismissDoorbell}
+//             />
+//         </>
+//     );
+// };
