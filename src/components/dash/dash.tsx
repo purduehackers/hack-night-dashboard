@@ -1,4 +1,5 @@
 import { getConfig } from "@/lib/config";
+import { digest } from "@vercel/edge-config";
 import { FC } from "react";
 import { GliderFlat } from "@/components/icons";
 // import { DoorbellProvider } from "@/components/doorbell/doorbell-context";
@@ -12,45 +13,51 @@ import { SessionAnnouncer } from "./sessions";
 import { LightningClock } from "./clock";
 import { ScreenyNoSleepy } from "./waker";
 import { DiscordFeed } from "./discord-feed";
+import { ConfigRefresh } from "./config-refresh";
 
-// const { version, maintainer } = await getConfigs("version", "maintainer");
-const version = await getConfig("version");
+export const Dash: FC = async () => {
+    // Read the digest before the displayed values so an edit during rendering
+    // is still detected by the client's first poll.
+    const hash = await digest();
+    const version = await getConfig("version");
 
-export const Dash: FC = () => (
-    <Coordinator>
-        <NotificationProvider>
-            {/*<ActivatePopup />*/}
-            <SessionAnnouncer />
-            <Countdown />
-            <ScreenyNoSleepy />
-            {/* Doorbell integration disabled; keep the wiring for future use. */}
-            {/* <DoorbellProvider> */}
-            {/* <DoorbellNotifier maintainer={maintainer} /> */}
-            <div className="relative flex h-full w-full flex-row">
-                <div className="flex flex-2 flex-col">
-                    <TitleSection />
-                    <LightningClock
-                        containerProps={{
-                            className:
-                                "flex flex-row items-end justify-between gap-16 border bg-black px-16 py-12",
-                        }}
-                        lightningTimeProps={{
-                            className:
-                                "font-whyte text-8xl font-black whitespace-nowrap italic",
-                        }}
-                        normalTimeProps={{
-                            className: "text-4xl font-bold",
-                        }}
-                    />
+    return (
+        <Coordinator>
+            <ConfigRefresh hash={hash} />
+            <NotificationProvider>
+                {/*<ActivatePopup />*/}
+                <SessionAnnouncer />
+                <Countdown />
+                <ScreenyNoSleepy />
+                {/* Doorbell integration disabled; keep the wiring for future use. */}
+                {/* <DoorbellProvider> */}
+                {/* <DoorbellNotifier maintainer={maintainer} /> */}
+                <div className="relative flex h-full w-full flex-row">
+                    <div className="flex flex-2 flex-col">
+                        <TitleSection version={version} />
+                        <LightningClock
+                            containerProps={{
+                                className:
+                                    "flex flex-row items-end justify-between gap-16 border bg-black px-16 py-12",
+                            }}
+                            lightningTimeProps={{
+                                className:
+                                    "font-whyte text-8xl font-black whitespace-nowrap italic",
+                            }}
+                            normalTimeProps={{
+                                className: "text-4xl font-bold",
+                            }}
+                        />
+                    </div>
+                    <DiscordFeed />
                 </div>
-                <DiscordFeed />
-            </div>
-            {/* </DoorbellProvider> */}
-        </NotificationProvider>
-    </Coordinator>
-);
+                {/* </DoorbellProvider> */}
+            </NotificationProvider>
+        </Coordinator>
+    );
+};
 
-const TitleSection: FC = async () => {
+const TitleSection: FC<{ version: string }> = ({ version }) => {
     return (
         <div className="border-ph-purple relative flex grow items-center gap-8 border border-b-0 p-16 text-white">
             <DitheredSoup />

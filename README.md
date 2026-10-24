@@ -20,6 +20,27 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Dashboard config refresh
+
+The dashboard checks `/api/update-hash` immediately on mount and every 30 seconds
+after each completed check. When Edge Config changes, it refreshes the server
+components in place, including the version and page metadata, while preserving
+client state such as the chat's left/right position, Discord messages, and popup
+coordination. Failed checks keep the current display and retry; requests time out
+after 10 seconds.
+
+Run the browser regression tests with:
+
+```bash
+bun install
+bun x playwright install chromium
+bun run test:e2e
+```
+
+The tests build and run the production app against a local mock Edge Config and
+CMS on ports 4117 and 4118. Discord and client telemetry are intercepted in the
+browser; no production credentials or config edits are needed.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
