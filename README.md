@@ -25,8 +25,9 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 The dashboard checks `/api/update-hash` immediately on mount and every 30 seconds
 after each completed check. When Edge Config changes, it refreshes the server
 components in place, including the version and page metadata, while preserving
-client state such as Discord messages and popup coordination. Failed checks keep
-the current display and retry; requests time out after 10 seconds.
+client state such as the chat's left/right position, Discord messages, and popup
+coordination. Failed checks keep the current display and retry; requests time out
+after 10 seconds.
 
 Run the browser regression tests with:
 

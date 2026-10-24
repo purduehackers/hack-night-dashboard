@@ -26,7 +26,7 @@ test.beforeEach(async ({ page, request }) => {
     );
 });
 
-test("refreshes config and metadata while preserving the live feed", async ({
+test("refreshes config and metadata while preserving the live feed and chat position", async ({
     page,
     request,
 }) => {
@@ -48,31 +48,44 @@ test("refreshes config and metadata while preserving the live feed", async ({
     await (await firstPoll).finished();
     await expect(page.getByText("v1.00", { exact: true })).toBeVisible();
     await expect.poll(() => socketConnections).toBe(1);
-    socket.send(
-        JSON.stringify({
-            id: "refresh-test-message",
-            channel: { id: "test-channel", name: "general" },
-            author: {
-                id: "123456789012345678",
-                name: "Tester",
-                avatarHash: null,
-            },
-            timestamp: "2026-10-23T19:00:00Z",
-            content: {
-                markdown: "Keep this message",
-                html: "Keep this message",
-            },
-        }),
-    );
-    await expect(
-        page.getByText("Keep this message", { exact: true }),
-    ).toBeVisible();
+    const sendMessage = (id, content) =>
+        socket.send(
+            JSON.stringify({
+                id,
+                channel: { id: "test-channel", name: "general" },
+                author: {
+                    id: "123456789012345678",
+                    name: "Tester",
+                    avatarHash: null,
+                },
+                timestamp: "2026-10-23T19:00:00Z",
+                content: { markdown: content, html: content },
+            }),
+        );
+    sendMessage("refresh-test-message", "Keep this message");
+    const message = page.getByText("Keep this message", { exact: true });
+    await expect(message).toBeVisible();
+    const expectChatSide = (side) =>
+        expect
+            .poll(async () => {
+                const chatBounds = await message.boundingBox();
+                const titleBounds = await page
+                    .getByRole("heading", { name: "Hack Night", exact: true })
+                    .boundingBox();
+                if (!chatBounds || !titleBounds) return null;
+                return chatBounds.x < titleBounds.x ? "left" : "right";
+            })
+            .toBe(side);
+    await expectChatSide("right");
+    sendMessage("move-chat-left", "Move the chat left");
+    await expectChatSide("left");
     await page.evaluate(() => {
         document.body.dataset.refreshTest = "same-document";
     });
 
     await nextPoll(page);
     expect(refreshRequests).toBe(0);
+    await expectChatSide("left");
 
     await updateConfig(request, {
         items: { version: "1.01", title: "Updated Hack Night" },
@@ -83,6 +96,7 @@ test("refreshes config and metadata while preserving the live feed", async ({
     await expect(
         page.getByText("Keep this message", { exact: true }),
     ).toBeVisible();
+    await expectChatSide("left");
     await expect(page.locator("body")).toHaveAttribute(
         "data-refresh-test",
         "same-document",
@@ -94,6 +108,7 @@ test("refreshes config and metadata while preserving the live feed", async ({
     await updateConfig(request, { items: { version: "1.02" } });
     await nextPoll(page);
     await expect(page.getByText("v1.02", { exact: true })).toBeVisible();
+    await expectChatSide("left");
 
     await updateConfig(request, {
         items: { version: "1.02", title: "Metadata changed on its own" },
@@ -101,6 +116,17 @@ test("refreshes config and metadata while preserving the live feed", async ({
     await nextPoll(page);
     await expect(page).toHaveTitle("Metadata changed on its own");
     await expect(page.getByText("v1.02", { exact: true })).toBeVisible();
+    await expectChatSide("left");
+
+    // Preserve the latest position, including a move after earlier refreshes.
+    sendMessage("move-chat-right", "Move the chat right");
+    await expectChatSide("right");
+    await updateConfig(request, { items: { version: "1.03" } });
+    await nextPoll(page);
+    await expect(page.getByText("v1.03", { exact: true })).toBeVisible();
+    await expectChatSide("right");
+    await expect(message).toBeVisible();
+    expect(socketConnections).toBe(1);
 });
 
 test("reconciles an edit between server rendering and the first poll", async ({
