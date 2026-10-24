@@ -1,14 +1,8 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { Inconsolata, Silkscreen } from "next/font/google";
+import { Inconsolata } from "next/font/google";
 import localFont from "next/font/local";
 import { getConfigs } from "@/lib/config";
-
-const silkscreen = Silkscreen({
-    weight: ["400", "700"],
-    variable: "--font-silkscreen",
-    subsets: ["latin"],
-});
 
 const inconsolata = Inconsolata({
     variable: "--font-inconsolata",
@@ -33,6 +27,12 @@ const polySans = localFont({
     variable: "--font-polysans",
 });
 
+const pixel = localFont({
+    src: "../fonts/PixelHackers.woff2",
+    fallback: ["system-ui", "sans-serif"],
+    variable: "--font-pixel",
+});
+
 export const generateMetadata = async (): Promise<Metadata> => {
     const { title, description } = await getConfigs("title", "description");
     const image = {
@@ -45,7 +45,7 @@ export const generateMetadata = async (): Promise<Metadata> => {
     return {
         title,
         description,
-        icons: "/glider-flat.svg",
+        icons: "/glider.svg",
         openGraph: {
             type: "website",
             url: "https://night.purduehackers.com",
@@ -72,7 +72,7 @@ export default function RootLayout({
     return (
         <html lang="en" className="h-dvh w-dvw">
             <body
-                className={`${inconsolata.variable} ${silkscreen.variable} ${whyte.variable} ${polySans.variable} text-foreground font-inconsolata h-dvh w-dvw antialiased`}
+                className={`${inconsolata.variable} ${whyte.variable} ${polySans.variable} ${pixel.variable} text-foreground font-inconsolata h-dvh w-dvw antialiased`}
             >
                 <div className="size-full bg-black p-8">{children}</div>
             </body>

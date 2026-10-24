@@ -11,6 +11,8 @@ import { DiscordUserMention } from "@/components/ui/discord";
 import { GliderFlat, PixelClock } from "@/components/icons";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { useSound } from "@/lib/sound";
+import { Media } from "@/lib/payload-types";
 
 const AS_MS = {
     second: 1000,
@@ -57,18 +59,23 @@ function getSessionTimeRange(): { since: Date; until: Date } {
 }
 
 export const SessionAnnouncer: FC = () => {
-    const { notificationsPaused } = useCoordinator();
+    const { allPopupsPaused, pauseCheckpoints, unpauseCheckpoints } =
+        useCoordinator();
     const [now, setNow] = useState<number>();
+    const pipeSound = useSound("/pipe.mp3");
 
     // Fetch session data
     const { since, until } = getSessionTimeRange();
-    const { data } = useSWR(["/api/sessions", since, until], fetcher, {
-        refreshInterval: 60_000, // 1 minute
-    });
+    const { data } = useSWR(
+        ["/api/sessions", since, until],
+        fetcher,
+        {
+            refreshInterval: 60_000, // 1 minute
+        },
+    );
 
     // Update `now` every second
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setNow(Date.now());
         const timer = window.setInterval(
             () => setNow(Date.now()),
@@ -93,9 +100,20 @@ export const SessionAnnouncer: FC = () => {
                   );
               });
 
+    // Pause checkpoints announcements while session announcement is up
+    useEffect(() => {
+        if (activeSession) {
+            pauseCheckpoints();
+            pipeSound.play();
+        } else {
+            unpauseCheckpoints();
+            pipeSound.pause();
+        }
+    }, [activeSession, pauseCheckpoints, unpauseCheckpoints, pipeSound]);
+
     return (
         <Overlay
-            open={activeSession !== undefined && !notificationsPaused}
+            open={activeSession !== undefined && !allPopupsPaused}
             className="p-0"
         >
             {activeSession && (
@@ -109,7 +127,6 @@ function timerText(sessionDate: string, now: number): string {
     const start = new Date(sessionDate).getTime();
     if (start <= now) return "starting now";
     const msLeft = start - now;
-    console.log({ msLeft });
     const minutesLeft = Math.floor(msLeft / AS_MS.minute);
     const secondsLeft = Math.floor(msLeft / AS_MS.second);
     const selected = minutesLeft > 0 ? minutesLeft : secondsLeft;
@@ -123,7 +140,10 @@ export const SessionOverlayContent: FC<{
     session: HydratedSession;
     now: number;
 }> = ({ session, now }) => {
-    // const images = [...session.images!, ...session.images!];
+    const images = (session.images ?? []).filter(
+        (image) =>
+            image.id && typeof image.image === "object" && image.image.url,
+    );
     const hasDiscord = session.host.discordName !== undefined;
     const namesSame =
         hasDiscord &&
@@ -140,12 +160,8 @@ export const SessionOverlayContent: FC<{
     return (
         <div className="relative size-full p-16">
             <div className="border-ph-purple flex size-full flex-col justify-between gap-8 border bg-black p-8">
-                <h1 className="font-silkscreen text-ph-yellow text-[9rem] leading-[0.85]">
-                    {session.title.split("").map((c, i) => (
-                        <span key={i} className="-mx-[0.07em]">
-                            {c}
-                        </span>
-                    ))}
+                <h1 className="font-pixel text-ph-yellow text-[9rem] leading-[0.85]">
+                    {session.title}
                 </h1>
 
                 {/* Description & images */}
@@ -161,12 +177,24 @@ export const SessionOverlayContent: FC<{
 
                     <div
                         className={cn(
-                            "flex flex-1 items-center justify-evenly gap-8",
-                            // images.length > 1 ? "flex-2" : "flex-1",
+                            "flex items-center justify-evenly gap-8",
+                            images.length > 1 ? "flex-2" : "flex-1",
                         )}
                     >
-                        {/* FIXME: display images from CMS */}
-                        <GliderFlat className="block h-40" width={undefined} />
+                        {images.length > 0 ? (
+                            images.map((image) => (
+                                <SessionImage
+                                    key={image.id}
+                                    image={image}
+                                    className="min-w-0 flex-1"
+                                />
+                            ))
+                        ) : (
+                            <GliderFlat
+                                className="block h-40"
+                                width={undefined}
+                            />
+                        )}
                     </div>
                 </div>
 

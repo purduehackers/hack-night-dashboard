@@ -29,8 +29,8 @@ const confettiStopTime = ((): string => {
 
 export const Countdown: FC = () => {
     const { lightningString } = useLightningTimeClock();
-    const { pauseNotifications, unpauseNotifications } = useCoordinator();
-    const { play, pause } = useSound("/clock.mp3", { loop: true });
+    const { pauseAllPopups, unpauseAllPopups } = useCoordinator();
+    const clockSound = useSound("/clock.mp3", { loop: true });
 
     // Lightning time is lexicographically ordered, so string comparisons work
 
@@ -53,20 +53,20 @@ export const Countdown: FC = () => {
     // Runs on mount as well, so mounting during countdown applies the pause.
     useEffect(() => {
         if (isCountdown) {
-            pauseNotifications();
+            pauseAllPopups();
         } else {
-            unpauseNotifications();
+            unpauseAllPopups();
         }
-    }, [isCountdown, pauseNotifications, unpauseNotifications]);
+    }, [isCountdown, pauseAllPopups, unpauseAllPopups]);
 
     // Play audio when it's time
     useEffect(() => {
         if (isSoundPlaying) {
-            play();
+            clockSound.play();
         } else {
-            pause();
+            clockSound.pause();
         }
-    }, [isSoundPlaying, play, pause]);
+    }, [isSoundPlaying, clockSound]);
 
     const content = (
         <>
@@ -114,7 +114,7 @@ const Announcement: FC<{ open: boolean }> = ({ open }) => {
         // #fb2c36 = red-500
         <Overlay open={open} color="#fb2c36">
             <div className="text-foreground relative flex size-full h-full flex-col items-center justify-evenly px-16 py-8 text-center">
-                <h1 className="font-silkscreen text-9xl leading-tight tracking-tighter drop-shadow-lg drop-shadow-black">
+                <h1 className="font-pixel text-9xl leading-tight drop-shadow-lg drop-shadow-black">
                     Countdown time!
                 </h1>
                 <LightningClock

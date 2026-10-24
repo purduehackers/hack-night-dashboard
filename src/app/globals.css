@@ -11,8 +11,8 @@
 
     --font-whyte: var(--font-whyte);
     --font-polysans: var(--font-polysans);
-    --font-silkscreen: var(--font-silkscreen);
     --font-inconsolata: var(--font-inconsolata);
+    --font-pixel: var(--font-pixel);
 }
 
 @theme {

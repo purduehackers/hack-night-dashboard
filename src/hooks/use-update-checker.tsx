@@ -1,18 +1,14 @@
 "use client";
 
 import { captureException } from "@sentry/nextjs";
-import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 const POLL_INTERVAL = 30_000;
+const REQUEST_TIMEOUT = 10_000;
 
-interface UpdateHashResponse {
-    hash: string;
-    version: string;
-}
-
-export function useUpdateChecker(initialVersion: string): string {
-    const hashRef = useRef<string | null>(null);
-    const [version, setVersion] = useState(initialVersion);
+export function useUpdateChecker(renderedHash: string): void {
+    const router = useRouter();
 
     useEffect(() => {
         const controller = new AbortController();
@@ -21,23 +17,28 @@ export function useUpdateChecker(initialVersion: string): string {
         async function poll() {
             try {
                 const res = await fetch("/api/update-hash", {
-                    signal: controller.signal,
+                    cache: "no-store",
+                    signal: AbortSignal.any([
+                        controller.signal,
+                        AbortSignal.timeout(REQUEST_TIMEOUT),
+                    ]),
                 });
                 if (!res.ok) return;
-                const data = (await res.json()) as UpdateHashResponse;
-
-                if (hashRef.current === null) {
-                    // First successful poll: initialize hash and reconcile version if needed.
-                    hashRef.current = data.hash;
-                    if (data.version !== initialVersion) {
-                        setVersion(data.version);
-                    }
-                    return;
+                const data: unknown = await res.json();
+                if (
+                    !data ||
+                    typeof data !== "object" ||
+                    !("hash" in data) ||
+                    typeof data.hash !== "string" ||
+                    data.hash.length === 0
+                ) {
+                    throw new Error("Invalid configuration digest response");
                 }
 
-                if (hashRef.current !== data.hash) {
-                    setVersion(data.version);
-                    hashRef.current = data.hash;
+                // Compare with the server-rendered snapshot, including on the
+                // first poll. Keep retrying until a refresh actually renders it.
+                if (!controller.signal.aborted && data.hash !== renderedHash) {
+                    router.refresh();
                 }
             } catch (error) {
                 if (controller.signal.aborted) return;
@@ -54,7 +55,5 @@ export function useUpdateChecker(initialVersion: string): string {
             controller.abort();
             clearTimeout(timeoutId);
         };
-    }, []);
-
-    return version;
+    }, [renderedHash, router]);
 }

@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef } from "react";
+import { captureException } from "@sentry/nextjs";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 interface UseSoundOptions {
     /**
@@ -20,22 +21,30 @@ export function useSound(src: string, opts: UseSoundOptions = {}) {
 
     useEffect(() => {
         const audio = new Audio(src);
-        console.log("audio", audio);
         audio.loop = loop;
 
         audioRef.current = audio;
         return () => audio.pause();
     }, [src, loop]);
 
-    return {
-        play: useCallback(async () => {
-            if (rewind && audioRef.current) {
-                audioRef.current.currentTime = 0;
+    const play = useCallback(async () => {
+        if (rewind && audioRef.current) {
+            audioRef.current.currentTime = 0;
+        }
+        return audioRef.current?.play().catch((error) => {
+            if (
+                error instanceof DOMException &&
+                error.name === "NotAllowedError"
+            ) {
+                // Can't play because the page hasn't been interacted with yet
+                return;
             }
-            return audioRef.current
-                ?.play()
-                .catch((error) => console.error("Error playing sound", error));
-        }, [rewind]),
-        pause: useCallback(() => audioRef.current?.pause(), []),
-    };
+            captureException(error, { extra: { audioSrc: src } });
+            console.error("Error playing sound", error);
+        });
+    }, [rewind, src]);
+
+    const pause = useCallback(() => audioRef.current?.pause(), []);
+
+    return useMemo(() => ({ play, pause }), [play, pause]);
 }
