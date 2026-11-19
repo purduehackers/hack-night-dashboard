@@ -19,7 +19,6 @@
         "@radix-ui/react-alert-dialog": "^1.1.15",
         "@radix-ui/react-toast": "^1.2.15",
         "@sentry/nextjs": "^10",
-        "@vercel/edge-config": "^1.4.3",
         "clsx": "^2.1.1",
         "discord-api-types": "^0.38.38",
         "lucide-react": "^0.563.0",

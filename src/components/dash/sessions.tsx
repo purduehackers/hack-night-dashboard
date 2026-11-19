@@ -12,7 +12,6 @@ import { GliderFlat, PixelClock } from "@/components/icons";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { useSound } from "@/lib/sound";
-import { Media } from "@/lib/payload-types";
 
 const AS_MS = {
     second: 1000,
@@ -66,13 +65,9 @@ export const SessionAnnouncer: FC = () => {
 
     // Fetch session data
     const { since, until } = getSessionTimeRange();
-    const { data } = useSWR(
-        ["/api/sessions", since, until],
-        fetcher,
-        {
-            refreshInterval: 60_000, // 1 minute
-        },
-    );
+    const { data } = useSWR(["/api/sessions", since, until], fetcher, {
+        refreshInterval: 60_000, // 1 minute
+    });
 
     // Update `now` every second
     useEffect(() => {

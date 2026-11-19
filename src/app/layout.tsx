@@ -2,7 +2,6 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { Inconsolata } from "next/font/google";
 import localFont from "next/font/local";
-import { getConfigs } from "@/lib/config";
 
 const inconsolata = Inconsolata({
     variable: "--font-inconsolata",
@@ -34,7 +33,9 @@ const pixel = localFont({
 });
 
 export const generateMetadata = async (): Promise<Metadata> => {
-    const { title, description } = await getConfigs("title", "description");
+    const title = "Hack Night Dashboard";
+    const description =
+        "A dashboard for Hack Night, Purdue Hackers' weekly meet-up";
     const image = {
         url: "https://night.purduehackers.com/opengraph.png",
         type: "image/png",

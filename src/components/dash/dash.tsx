@@ -1,5 +1,3 @@
-import { getConfig } from "@/lib/config";
-import { digest } from "@vercel/edge-config";
 import { FC } from "react";
 import { GliderFlat } from "@/components/icons";
 // import { DoorbellProvider } from "@/components/doorbell/doorbell-context";
@@ -13,17 +11,11 @@ import { SessionAnnouncer } from "./sessions";
 import { LightningClock } from "./clock";
 import { ScreenyNoSleepy } from "./waker";
 import { DiscordFeed } from "./discord-feed";
-import { ConfigRefresh } from "./config-refresh";
+import { HackNightVersion } from "./hack-night-version";
 
-export const Dash: FC = async () => {
-    // Read the digest before the displayed values so an edit during rendering
-    // is still detected by the client's first poll.
-    const hash = await digest();
-    const version = await getConfig("version");
-
+export const Dash: FC = () => {
     return (
         <Coordinator>
-            <ConfigRefresh hash={hash} />
             <NotificationProvider>
                 {/*<ActivatePopup />*/}
                 <SessionAnnouncer />
@@ -34,7 +26,7 @@ export const Dash: FC = async () => {
                 {/* <DoorbellNotifier maintainer={maintainer} /> */}
                 <div className="relative flex h-full w-full flex-row">
                     <div className="flex flex-2 flex-col">
-                        <TitleSection version={version} />
+                        <TitleSection />
                         <LightningClock
                             containerProps={{
                                 className:
@@ -57,7 +49,7 @@ export const Dash: FC = async () => {
     );
 };
 
-const TitleSection: FC<{ version: string }> = ({ version }) => {
+const TitleSection: FC = () => {
     return (
         <div className="border-ph-purple relative flex grow items-center gap-8 border border-b-0 p-16 text-white">
             <DitheredSoup />
@@ -74,9 +66,7 @@ const TitleSection: FC<{ version: string }> = ({ version }) => {
                         N<i className="relative me-3">i</i>ght
                     </span>
                 </h1>
-                <div className="text-ph-yellow font-inconsolata col-2 ms-4 mt-4 text-4xl font-bold">
-                    v{version}
-                </div>
+                <HackNightVersion />
             </div>
         </div>
     );
