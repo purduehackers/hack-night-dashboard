@@ -65,15 +65,22 @@ export interface Config {
   auth: {
     users: UserAuthOperations;
     'service-accounts': ServiceAccountAuthOperations;
+    'payload-mcp-api-keys': PayloadMcpApiKeyAuthOperations;
   };
   blocks: {};
   collections: {
     users: User;
-    media: Media;
-    'shelter-projects': ShelterProject;
-    events: Event;
-    sessions: Session;
     'service-accounts': ServiceAccount;
+    media: Media;
+    events: Event;
+    emails: Email;
+    rsvps: Rsvp;
+    'hack-night-sessions': HackNightSession;
+    shelter: Shelter;
+    microgrants: Microgrant;
+    redirects: Redirect;
+    search: Search;
+    'payload-mcp-api-keys': PayloadMcpApiKey;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -82,11 +89,17 @@ export interface Config {
   collectionsJoins: {};
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
-    media: MediaSelect<false> | MediaSelect<true>;
-    'shelter-projects': ShelterProjectsSelect<false> | ShelterProjectsSelect<true>;
-    events: EventsSelect<false> | EventsSelect<true>;
-    sessions: SessionsSelect<false> | SessionsSelect<true>;
     'service-accounts': ServiceAccountsSelect<false> | ServiceAccountsSelect<true>;
+    media: MediaSelect<false> | MediaSelect<true>;
+    events: EventsSelect<false> | EventsSelect<true>;
+    emails: EmailsSelect<false> | EmailsSelect<true>;
+    rsvps: RsvpsSelect<false> | RsvpsSelect<true>;
+    'hack-night-sessions': HackNightSessionsSelect<false> | HackNightSessionsSelect<true>;
+    shelter: ShelterSelect<false> | ShelterSelect<true>;
+    microgrants: MicrograntsSelect<false> | MicrograntsSelect<true>;
+    redirects: RedirectsSelect<false> | RedirectsSelect<true>;
+    search: SearchSelect<false> | SearchSelect<true>;
+    'payload-mcp-api-keys': PayloadMcpApiKeysSelect<false> | PayloadMcpApiKeysSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -99,13 +112,10 @@ export interface Config {
   globals: {};
   globalsSelect: {};
   locale: null;
-  user:
-    | (User & {
-        collection: 'users';
-      })
-    | (ServiceAccount & {
-        collection: 'service-accounts';
-      });
+  widgets: {
+    collections: CollectionsWidget;
+  };
+  user: User | ServiceAccount | PayloadMcpApiKey;
   jobs: {
     tasks: unknown;
     workflows: unknown;
@@ -147,13 +157,31 @@ export interface ServiceAccountAuthOperations {
     password: string;
   };
 }
+export interface PayloadMcpApiKeyAuthOperations {
+  forgotPassword: {
+    email: string;
+    password: string;
+  };
+  login: {
+    email: string;
+    password: string;
+  };
+  registerFirstUser: {
+    email: string;
+    password: string;
+  };
+  unlock: {
+    email: string;
+    password: string;
+  };
+}
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
 export interface User {
   id: number;
-  roles: ('admin' | 'editor' | 'viewer' | 'sessionsViewer')[];
+  roles: ('admin' | 'editor' | 'viewer' | 'hack_night_dashboard' | 'events_website' | 'wack_hacker')[];
   updatedAt: string;
   createdAt: string;
   enableAPIKey?: boolean | null;
@@ -174,6 +202,28 @@ export interface User {
       }[]
     | null;
   password?: string | null;
+  collection: 'users';
+}
+/**
+ * Service Accounts (API keys)
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "service-accounts".
+ */
+export interface ServiceAccount {
+  id: number;
+  name: string;
+  /**
+   * Check to revoke the API key
+   */
+  revoked: boolean;
+  roles: ('admin' | 'editor' | 'viewer' | 'hack_night_dashboard' | 'events_website' | 'wack_hacker')[];
+  updatedAt: string;
+  createdAt: string;
+  enableAPIKey?: boolean | null;
+  apiKey?: string | null;
+  apiKeyIndex?: string | null;
+  collection: 'service-accounts';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -182,6 +232,13 @@ export interface User {
 export interface Media {
   id: number;
   alt: string;
+  /**
+   * Groups media uploaded in the same batch: a hack-night date slug, or the slug of the event an /image-drop thread files to. Filter by this to bulk-attach into events.images[].
+   */
+  batchId?: string | null;
+  discordMessageId?: string | null;
+  discordUserId?: string | null;
+  source?: ('manual' | 'hack-night' | 'discord-drop') | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -191,24 +248,8 @@ export interface Media {
   filesize?: number | null;
   width?: number | null;
   height?: number | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "shelter-projects".
- */
-export interface ShelterProject {
-  id: number;
-  /**
-   * Uncheck to hide from the public API
-   */
-  visible?: boolean | null;
-  name: string;
-  last_division: string;
-  last_owner: string;
-  description: string;
-  image: number | Media;
-  updatedAt: string;
-  createdAt: string;
+  focalX?: number | null;
+  focalY?: number | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -217,11 +258,23 @@ export interface ShelterProject {
 export interface Event {
   id: number;
   name: string;
+  /**
+   * Unique URL-friendly slug. Hack Night slugs must be a version number (e.g. 1.2.3). Attempts to autogenerate when empty.
+   */
+  slug?: string | null;
+  /**
+   * Controls whether the event information is public (will show on events site)
+   */
+  published: boolean;
   eventType: string;
   start: string;
-  end?: string | null;
+  end: string;
   location_name?: string | null;
   location_url?: string | null;
+  /**
+   * Set this only for events which require RSVP through Luma to attend. When set, the events site's RSVP feature will be disabled and it will link to the Luma event instead.
+   */
+  luma_url?: string | null;
   stats?:
     | {
         data: string;
@@ -250,6 +303,63 @@ export interface Event {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Check this box then save this event to send an email reminder to all RSVPs.
+   */
+  send?: boolean | null;
+  /**
+   * When email was last sent.
+   */
+  sentAt?: string | null;
+  /**
+   * Set by the events site reminder cron once T-1-day reminders have gone out. Idempotence guard.
+   */
+  remindersSent?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "emails".
+ */
+export interface Email {
+  id: number;
+  /**
+   * This email will be sent to RSVP-ers subscribed to this event.
+   */
+  event: number | Event;
+  subject: string;
+  body: string;
+  /**
+   * Check this box then save this email to send an email reminder to all RSVPs for the selected event.
+   */
+  send?: boolean | null;
+  /**
+   * When email was last sent.
+   */
+  sentAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rsvps".
+ */
+export interface Rsvp {
+  id: number;
+  email: string;
+  name?: string | null;
+  event: number | Event;
+  /**
+   * Designates whether owner of this email has unsubscribed from further notifs.
+   */
+  unsubscribed?: boolean | null;
+  cancelToken?: string | null;
+  /**
+   * Guest cancelled via their emailed cancel link.
+   */
+  cancelled?: boolean | null;
+  cancelledAt?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -257,9 +367,9 @@ export interface Event {
  * Hack Night sessions
  *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "sessions".
+ * via the `definition` "hack-night-sessions".
  */
-export interface Session {
+export interface HackNightSession {
   id: number;
   title: string;
   date: string;
@@ -299,24 +409,302 @@ export interface Session {
   createdAt: string;
 }
 /**
- * Service Accounts (API keys)
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "shelter".
+ */
+export interface Shelter {
+  id: number;
+  /**
+   * Uncheck to hide from the public API
+   */
+  visible?: boolean | null;
+  name: string;
+  last_division: string;
+  last_owner: string;
+  description: string;
+  image: number | Media;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "microgrants".
+ */
+export interface Microgrant {
+  id: number;
+  /**
+   * Uncheck to hide from the public API
+   */
+  visible?: boolean | null;
+  name: string;
+  author: string;
+  description: string;
+  image: number | Media;
+  /**
+   * URL to the author's website
+   */
+  authorUrl?: string | null;
+  /**
+   * URL to the project's website
+   */
+  projectUrl?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "redirects".
+ */
+export interface Redirect {
+  id: number;
+  from: string;
+  to?: {
+    type?: ('reference' | 'custom') | null;
+    reference?:
+      | ({
+          relationTo: 'events';
+          value: number | Event;
+        } | null)
+      | ({
+          relationTo: 'shelter';
+          value: number | Shelter;
+        } | null)
+      | ({
+          relationTo: 'microgrants';
+          value: number | Microgrant;
+        } | null)
+      | ({
+          relationTo: 'hack-night-sessions';
+          value: number | HackNightSession;
+        } | null);
+    url?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This is a collection of automatically created search results. These results are used by the global site search and will be updated automatically as documents in the CMS are created or updated.
  *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "service-accounts".
+ * via the `definition` "search".
  */
-export interface ServiceAccount {
+export interface Search {
   id: number;
-  name: string;
+  title?: string | null;
+  priority?: number | null;
+  doc:
+    | {
+        relationTo: 'events';
+        value: number | Event;
+      }
+    | {
+        relationTo: 'shelter';
+        value: number | Shelter;
+      }
+    | {
+        relationTo: 'microgrants';
+        value: number | Microgrant;
+      }
+    | {
+        relationTo: 'hack-night-sessions';
+        value: number | HackNightSession;
+      };
+  eventSlug?: string | null;
+  eventType?: string | null;
+  start?: string | null;
+  published?: boolean | null;
+  excerpt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * API keys control which collections, resources, tools, and prompts MCP clients can access
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-mcp-api-keys".
+ */
+export interface PayloadMcpApiKey {
+  id: number;
   /**
-   * Check to revoke the API key
+   * The user that the API key is associated with.
    */
-  revoked: boolean;
-  roles: ('admin' | 'editor' | 'viewer' | 'sessionsViewer')[];
+  user: number | ServiceAccount;
+  /**
+   * A useful label for the API key.
+   */
+  label?: string | null;
+  /**
+   * The purpose of the API key.
+   */
+  description?: string | null;
+  events?: {
+    /**
+     * Allow clients to find events.
+     */
+    find?: boolean | null;
+    /**
+     * Allow clients to create events.
+     */
+    create?: boolean | null;
+    /**
+     * Allow clients to update events.
+     */
+    update?: boolean | null;
+    /**
+     * Allow clients to delete events.
+     */
+    delete?: boolean | null;
+  };
+  rsvps?: {
+    /**
+     * Allow clients to find rsvps.
+     */
+    find?: boolean | null;
+    /**
+     * Allow clients to create rsvps.
+     */
+    create?: boolean | null;
+    /**
+     * Allow clients to update rsvps.
+     */
+    update?: boolean | null;
+    /**
+     * Allow clients to delete rsvps.
+     */
+    delete?: boolean | null;
+  };
+  emails?: {
+    /**
+     * Allow clients to find emails.
+     */
+    find?: boolean | null;
+    /**
+     * Allow clients to create emails.
+     */
+    create?: boolean | null;
+    /**
+     * Allow clients to update emails.
+     */
+    update?: boolean | null;
+    /**
+     * Allow clients to delete emails.
+     */
+    delete?: boolean | null;
+  };
+  hackNightSessions?: {
+    /**
+     * Allow clients to find hack-night-sessions.
+     */
+    find?: boolean | null;
+    /**
+     * Allow clients to create hack-night-sessions.
+     */
+    create?: boolean | null;
+    /**
+     * Allow clients to update hack-night-sessions.
+     */
+    update?: boolean | null;
+    /**
+     * Allow clients to delete hack-night-sessions.
+     */
+    delete?: boolean | null;
+  };
+  media?: {
+    /**
+     * Allow clients to find media.
+     */
+    find?: boolean | null;
+    /**
+     * Allow clients to create media.
+     */
+    create?: boolean | null;
+    /**
+     * Allow clients to update media.
+     */
+    update?: boolean | null;
+    /**
+     * Allow clients to delete media.
+     */
+    delete?: boolean | null;
+  };
+  shelter?: {
+    /**
+     * Allow clients to find shelter.
+     */
+    find?: boolean | null;
+    /**
+     * Allow clients to create shelter.
+     */
+    create?: boolean | null;
+    /**
+     * Allow clients to update shelter.
+     */
+    update?: boolean | null;
+    /**
+     * Allow clients to delete shelter.
+     */
+    delete?: boolean | null;
+  };
+  microgrants?: {
+    /**
+     * Allow clients to find microgrants.
+     */
+    find?: boolean | null;
+    /**
+     * Allow clients to create microgrants.
+     */
+    create?: boolean | null;
+    /**
+     * Allow clients to update microgrants.
+     */
+    update?: boolean | null;
+    /**
+     * Allow clients to delete microgrants.
+     */
+    delete?: boolean | null;
+  };
+  users?: {
+    /**
+     * Allow clients to find users.
+     */
+    find?: boolean | null;
+    /**
+     * Allow clients to create users.
+     */
+    create?: boolean | null;
+    /**
+     * Allow clients to update users.
+     */
+    update?: boolean | null;
+    /**
+     * Allow clients to delete users.
+     */
+    delete?: boolean | null;
+  };
+  serviceAccounts?: {
+    /**
+     * Allow clients to find service-accounts.
+     */
+    find?: boolean | null;
+    /**
+     * Allow clients to create service-accounts.
+     */
+    create?: boolean | null;
+    /**
+     * Allow clients to update service-accounts.
+     */
+    update?: boolean | null;
+    /**
+     * Allow clients to delete service-accounts.
+     */
+    delete?: boolean | null;
+  };
   updatedAt: string;
   createdAt: string;
   enableAPIKey?: boolean | null;
   apiKey?: string | null;
   apiKeyIndex?: string | null;
+  collection: 'payload-mcp-api-keys';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -347,24 +735,48 @@ export interface PayloadLockedDocument {
         value: number | User;
       } | null)
     | ({
-        relationTo: 'media';
-        value: number | Media;
+        relationTo: 'service-accounts';
+        value: number | ServiceAccount;
       } | null)
     | ({
-        relationTo: 'shelter-projects';
-        value: number | ShelterProject;
+        relationTo: 'media';
+        value: number | Media;
       } | null)
     | ({
         relationTo: 'events';
         value: number | Event;
       } | null)
     | ({
-        relationTo: 'sessions';
-        value: number | Session;
+        relationTo: 'emails';
+        value: number | Email;
       } | null)
     | ({
-        relationTo: 'service-accounts';
-        value: number | ServiceAccount;
+        relationTo: 'rsvps';
+        value: number | Rsvp;
+      } | null)
+    | ({
+        relationTo: 'hack-night-sessions';
+        value: number | HackNightSession;
+      } | null)
+    | ({
+        relationTo: 'shelter';
+        value: number | Shelter;
+      } | null)
+    | ({
+        relationTo: 'microgrants';
+        value: number | Microgrant;
+      } | null)
+    | ({
+        relationTo: 'redirects';
+        value: number | Redirect;
+      } | null)
+    | ({
+        relationTo: 'search';
+        value: number | Search;
+      } | null)
+    | ({
+        relationTo: 'payload-mcp-api-keys';
+        value: number | PayloadMcpApiKey;
       } | null);
   globalSlug?: string | null;
   user:
@@ -375,6 +787,10 @@ export interface PayloadLockedDocument {
     | {
         relationTo: 'service-accounts';
         value: number | ServiceAccount;
+      }
+    | {
+        relationTo: 'payload-mcp-api-keys';
+        value: number | PayloadMcpApiKey;
       };
   updatedAt: string;
   createdAt: string;
@@ -393,6 +809,10 @@ export interface PayloadPreference {
     | {
         relationTo: 'service-accounts';
         value: number | ServiceAccount;
+      }
+    | {
+        relationTo: 'payload-mcp-api-keys';
+        value: number | PayloadMcpApiKey;
       };
   key?: string | null;
   value?:
@@ -446,10 +866,28 @@ export interface UsersSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "service-accounts_select".
+ */
+export interface ServiceAccountsSelect<T extends boolean = true> {
+  name?: T;
+  revoked?: T;
+  roles?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  enableAPIKey?: T;
+  apiKey?: T;
+  apiKeyIndex?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media_select".
  */
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
+  batchId?: T;
+  discordMessageId?: T;
+  discordUserId?: T;
+  source?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -459,20 +897,8 @@ export interface MediaSelect<T extends boolean = true> {
   filesize?: T;
   width?: T;
   height?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "shelter-projects_select".
- */
-export interface ShelterProjectsSelect<T extends boolean = true> {
-  visible?: T;
-  name?: T;
-  last_division?: T;
-  last_owner?: T;
-  description?: T;
-  image?: T;
-  updatedAt?: T;
-  createdAt?: T;
+  focalX?: T;
+  focalY?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -480,11 +906,14 @@ export interface ShelterProjectsSelect<T extends boolean = true> {
  */
 export interface EventsSelect<T extends boolean = true> {
   name?: T;
+  slug?: T;
+  published?: T;
   eventType?: T;
   start?: T;
   end?: T;
   location_name?: T;
   location_url?: T;
+  luma_url?: T;
   stats?:
     | T
     | {
@@ -499,14 +928,45 @@ export interface EventsSelect<T extends boolean = true> {
         image?: T;
         id?: T;
       };
+  send?: T;
+  sentAt?: T;
+  remindersSent?: T;
   updatedAt?: T;
   createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "sessions_select".
+ * via the `definition` "emails_select".
  */
-export interface SessionsSelect<T extends boolean = true> {
+export interface EmailsSelect<T extends boolean = true> {
+  event?: T;
+  subject?: T;
+  body?: T;
+  send?: T;
+  sentAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rsvps_select".
+ */
+export interface RsvpsSelect<T extends boolean = true> {
+  email?: T;
+  name?: T;
+  event?: T;
+  unsubscribed?: T;
+  cancelToken?: T;
+  cancelled?: T;
+  cancelledAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "hack-night-sessions_select".
+ */
+export interface HackNightSessionsSelect<T extends boolean = true> {
   title?: T;
   date?: T;
   published?: T;
@@ -528,12 +988,145 @@ export interface SessionsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "service-accounts_select".
+ * via the `definition` "shelter_select".
  */
-export interface ServiceAccountsSelect<T extends boolean = true> {
+export interface ShelterSelect<T extends boolean = true> {
+  visible?: T;
   name?: T;
-  revoked?: T;
-  roles?: T;
+  last_division?: T;
+  last_owner?: T;
+  description?: T;
+  image?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "microgrants_select".
+ */
+export interface MicrograntsSelect<T extends boolean = true> {
+  visible?: T;
+  name?: T;
+  author?: T;
+  description?: T;
+  image?: T;
+  authorUrl?: T;
+  projectUrl?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "redirects_select".
+ */
+export interface RedirectsSelect<T extends boolean = true> {
+  from?: T;
+  to?:
+    | T
+    | {
+        type?: T;
+        reference?: T;
+        url?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "search_select".
+ */
+export interface SearchSelect<T extends boolean = true> {
+  title?: T;
+  priority?: T;
+  doc?: T;
+  eventSlug?: T;
+  eventType?: T;
+  start?: T;
+  published?: T;
+  excerpt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-mcp-api-keys_select".
+ */
+export interface PayloadMcpApiKeysSelect<T extends boolean = true> {
+  user?: T;
+  label?: T;
+  description?: T;
+  events?:
+    | T
+    | {
+        find?: T;
+        create?: T;
+        update?: T;
+        delete?: T;
+      };
+  rsvps?:
+    | T
+    | {
+        find?: T;
+        create?: T;
+        update?: T;
+        delete?: T;
+      };
+  emails?:
+    | T
+    | {
+        find?: T;
+        create?: T;
+        update?: T;
+        delete?: T;
+      };
+  hackNightSessions?:
+    | T
+    | {
+        find?: T;
+        create?: T;
+        update?: T;
+        delete?: T;
+      };
+  media?:
+    | T
+    | {
+        find?: T;
+        create?: T;
+        update?: T;
+        delete?: T;
+      };
+  shelter?:
+    | T
+    | {
+        find?: T;
+        create?: T;
+        update?: T;
+        delete?: T;
+      };
+  microgrants?:
+    | T
+    | {
+        find?: T;
+        create?: T;
+        update?: T;
+        delete?: T;
+      };
+  users?:
+    | T
+    | {
+        find?: T;
+        create?: T;
+        update?: T;
+        delete?: T;
+      };
+  serviceAccounts?:
+    | T
+    | {
+        find?: T;
+        create?: T;
+        update?: T;
+        delete?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   enableAPIKey?: T;
@@ -579,6 +1172,16 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "collections_widget".
+ */
+export interface CollectionsWidget {
+  data?: {
+    [k: string]: unknown;
+  };
+  width: 'full';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
