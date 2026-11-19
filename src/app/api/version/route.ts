@@ -15,7 +15,7 @@ interface MinimalEvent {
 // Returns the version of the latest hack night event whose start time is before the current time.
 // Searches events whose start time is now +/- 1 week.
 export async function GET(): Promise<NextResponse> {
-    const now = new Date();
+    let now = new Date();
     const cmsQuery: {
         limit: number;
         where: Where;
@@ -42,6 +42,7 @@ export async function GET(): Promise<NextResponse> {
                 headers: {
                     Authorization: `service-accounts API-Key ${process.env.PAYLOAD_API_KEY}`,
                 },
+                signal: AbortSignal.timeout(100000),
             },
         );
         if (!response.ok) {
@@ -52,6 +53,8 @@ export async function GET(): Promise<NextResponse> {
         const data = CMSFindResponseSchema<MinimalEvent>().parse(
             await response.json(),
         );
+        // Get the current time again in case the API request took a while
+        now = new Date();
 
         let latestVersionStartingBeforeNow: string | undefined = undefined;
         let latestDate: Date | undefined = undefined;
@@ -82,16 +85,20 @@ export async function GET(): Promise<NextResponse> {
         if (latestDate === undefined && nextDate === undefined) {
             // No hack nights found in search window. Use a shorter TTL in case
             // this is a mistake and one gets published soon.
-            headers["Cache-Control"] = "public, max-age=60";
+            headers["Cache-Control"] = "public, max-age=60, s-maxage=60";
         } else if (nextDate === undefined) {
             // The next hack night after the active one isn't within the search
             // window, so we can cache the current version until the end of the
             // search window, which is 1 week from now.
-            headers["Cache-Control"] = `public, max-age=${WEEK_SECONDS}`;
+            headers["Cache-Control"] =
+                `public, max-age=${WEEK_SECONDS}, s-maxage=${WEEK_SECONDS}`;
         } else {
             // We know when the next hack night after the active one starts, so
             // cache until then.
-            headers["Cache-Control"] = "public";
+            const ttlSeconds = Math.floor(
+                (nextDate.getTime() - now.getTime()) / 1000,
+            );
+            headers["Cache-Control"] = `public, s-maxage=${ttlSeconds}`;
             headers["Expires"] = nextDate.toUTCString();
         }
         return new NextResponse(latestVersionStartingBeforeNow, { headers });
