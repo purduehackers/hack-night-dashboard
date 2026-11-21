@@ -8,12 +8,13 @@ const message = {
     content: { markdown: "My project", html: "<p>My project</p>" },
 };
 
-async function openDashboard(page) {
+async function openDashboard(page, onConnect) {
     let socket;
     await page.routeWebSocket(
-        "wss://api.purduehackers.com/discord/dashboard",
+        "wss://api.purduehackers.com/discord/dashboard?includeReplayIds=1",
         (ws) => {
             socket = ws;
+            onConnect?.(ws);
         },
     );
     await page.route("**/api/version", (route) =>
@@ -48,10 +49,82 @@ async function openDashboard(page) {
     return (frame) => socket.send(JSON.stringify(frame));
 }
 
+function checkpoint(id, text, channel = message.channel) {
+    return {
+        ...message,
+        id,
+        channel,
+        content: { markdown: text, html: `<p>${text}</p>` },
+    };
+}
+
+test("initial scrollback stays in the feed and only the live checkpoint plays", async ({
+    page,
+}) => {
+    const send = await openDashboard(page);
+    const old = checkpoint("1", "Earlier checkpoint");
+    const thread = checkpoint("2", "Earlier thread checkpoint", {
+        id: "1479527770483593266",
+        name: "thread",
+    });
+    const live = checkpoint("3", "Just posted");
+    send({ type: "replay", ids: [old.id, thread.id] });
+    send(old);
+    send(thread);
+    send({
+        ...old,
+        embedRevision: 1,
+        updateOnly: true,
+        embeds: [{ title: "Earlier preview" }],
+    });
+    await expect(page.getByText("Earlier preview")).toBeVisible();
+    await expect(page.getByText(thread.content.markdown)).toBeVisible();
+    await expect(
+        page.getByRole("heading", { name: /Checkpoint!/ }),
+    ).toHaveCount(0);
+    expect(await page.evaluate(() => window.gongs)).toBe(0);
+
+    send(live);
+    await expect(
+        page.getByText(live.content.markdown, { exact: true }),
+    ).toHaveCount(2);
+    await expect.poll(() => page.evaluate(() => window.gongs)).toBe(1);
+});
+
+test("reconnect plays a missed checkpoint without announcing unfinished startup history", async ({
+    page,
+}) => {
+    const connections = [];
+    const send = await openDashboard(page, (ws) => connections.push(ws));
+    const old = checkpoint("1", "Before loading");
+    const remaining = checkpoint("2", "Still in scrollback");
+    const missed = checkpoint("3", "Posted while offline");
+    send({ type: "replay", ids: [old.id, remaining.id] });
+    send(old);
+    await expect(
+        page.getByText(old.content.markdown, { exact: true }),
+    ).toHaveCount(1);
+    await connections[0].close({ code: 1001 });
+    await expect.poll(() => connections.length, { timeout: 15000 }).toBe(2);
+
+    send({ type: "replay", ids: [old.id, remaining.id, missed.id] });
+    send(old);
+    send(remaining);
+    send(missed);
+    await expect(
+        page.getByText(remaining.content.markdown, { exact: true }),
+    ).toHaveCount(1);
+    await expect(
+        page.getByText(missed.content.markdown, { exact: true }),
+    ).toHaveCount(2);
+    await expect.poll(() => page.evaluate(() => window.gongs)).toBe(1);
+});
+
 test("a delayed Twitter preview updates the feed and active checkpoint once", async ({
     page,
 }) => {
     const send = await openDashboard(page);
+    send({ type: "replay", ids: [] });
     send(message);
     await expect(
         page.getByRole("heading", { name: /Checkpoint!/ }),

@@ -15,7 +15,8 @@ import { useSound } from "@/lib/sound";
 import { discordEmbedSchema } from "@/lib/discord-embed";
 import { DiscordEmbeds } from "./discord-embeds";
 
-const DISCORD_FEED_WS_URL = "wss://api.purduehackers.com/discord/dashboard";
+const DISCORD_FEED_WS_URL =
+    "wss://api.purduehackers.com/discord/dashboard?includeReplayIds=1";
 
 const CHECKPOINTS_CHANNEL_IDS = new Set([
     "1479527770483593266", // thread in #bot-dump
@@ -50,6 +51,10 @@ const discordMessageSchema = z.object({
     updateOnly: z.literal(true).optional(),
 });
 type DiscordMessage = z.infer<typeof discordMessageSchema>;
+const discordFrameSchema = z.union([
+    discordMessageSchema,
+    z.object({ type: z.literal("replay"), ids: z.array(z.string()) }),
+]);
 
 export const DiscordFeed: FC = () => {
     const [chatSide, setChatSide] = useState<"left" | "right">("right");
@@ -66,7 +71,8 @@ export const DiscordFeed: FC = () => {
         [],
     );
     const wsRef = useRef<ReconnectingWebSocket>(null);
-    // The server replays the last 20 messages on every (re)connect, so
+    // Only the first replay is scrollback. A later replay can include new checkpoints missed while offline.
+    const initialReplayIds = useRef<Set<string> | null>(null);
     // Replays can carry a newer preview for a message that's already on screen.
     const seenRevisions = useRef(new Map<string, number>());
     const startTimeRef = useRef<number>(0);
@@ -109,7 +115,11 @@ export const DiscordFeed: FC = () => {
 
         ws.addEventListener("message", (ev) => {
             try {
-                const message = discordMessageSchema.parse(JSON.parse(ev.data));
+                const message = discordFrameSchema.parse(JSON.parse(ev.data));
+                if ("type" in message) {
+                    initialReplayIds.current ??= new Set(message.ids);
+                    return;
+                }
                 const previous = seenRevisions.current.get(message.id);
                 if (previous !== undefined) {
                     if (message.embedRevision <= previous) return;
@@ -145,7 +155,10 @@ export const DiscordFeed: FC = () => {
                         upsideDownTimerRef.current = null;
                     }, UPSIDE_DOWN_DURATION_MS);
                 }
-                if (CHECKPOINTS_CHANNEL_IDS.has(message.channel.id)) {
+                if (
+                    CHECKPOINTS_CHANNEL_IDS.has(message.channel.id) &&
+                    !initialReplayIds.current?.has(message.id)
+                ) {
                     setCheckpointQueue((prev) => [...prev, message]);
                 }
             } catch (error) {
