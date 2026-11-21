@@ -12,6 +12,8 @@ import { Overlay } from "../ui/overlay";
 import { LightningClock } from "./clock";
 import { cn } from "@/lib/utils";
 import { useSound } from "@/lib/sound";
+import { discordEmbedSchema } from "@/lib/discord-embed";
+import { DiscordEmbeds } from "./discord-embeds";
 
 const DISCORD_FEED_WS_URL = "wss://api.purduehackers.com/discord/dashboard";
 
@@ -43,6 +45,9 @@ const discordMessageSchema = z.object({
         html: z.string().trim(),
     }),
     attachments: z.array(z.string()).default([]),
+    embeds: z.array(discordEmbedSchema).default([]),
+    embedRevision: z.int().default(0),
+    updateOnly: z.literal(true).optional(),
 });
 type DiscordMessage = z.infer<typeof discordMessageSchema>;
 
@@ -62,9 +67,8 @@ export const DiscordFeed: FC = () => {
     );
     const wsRef = useRef<ReconnectingWebSocket>(null);
     // The server replays the last 20 messages on every (re)connect, so
-    // frames can repeat across reconnects. Track delivered ids to keep
-    // the feed and the checkpoint queue free of duplicates.
-    const seenIdsRef = useRef<Set<string>>(new Set());
+    // Replays can carry a newer preview for a message that's already on screen.
+    const seenRevisions = useRef(new Map<string, number>());
     const startTimeRef = useRef<number>(0);
     const msLeftRef = useRef<number>(CHECKPOINTS_DISPLAY_DURATION_MS);
     const { checkpointsPaused, pauseCheckpoints, unpauseCheckpoints } =
@@ -106,8 +110,22 @@ export const DiscordFeed: FC = () => {
         ws.addEventListener("message", (ev) => {
             try {
                 const message = discordMessageSchema.parse(JSON.parse(ev.data));
-                if (seenIdsRef.current.has(message.id)) return;
-                seenIdsRef.current.add(message.id);
+                const previous = seenRevisions.current.get(message.id);
+                if (previous !== undefined) {
+                    if (message.embedRevision <= previous) return;
+                    seenRevisions.current.set(
+                        message.id,
+                        message.embedRevision,
+                    );
+                    const refresh = (item: DiscordMessage) =>
+                        item.id === message.id ? message : item;
+                    setMessages((items) => items.map(refresh));
+                    setCheckpointQueue((items) => items.map(refresh));
+                    setCurrentCheckpoint((item) => item && refresh(item));
+                    return;
+                }
+                if (message.updateOnly) return;
+                seenRevisions.current.set(message.id, message.embedRevision);
                 setMessages((prev) => [message, ...prev.slice(0, 100)]);
                 // If both directions appear, the last word wins.
                 const directions =
@@ -161,8 +179,9 @@ export const DiscordFeed: FC = () => {
 
     // Timer effect: displays the current checkpoint for its remaining time,
     // pausing and saving remaining time when checkpointsPaused becomes true.
+    const checkpointId = currentCheckpoint?.id;
     useEffect(() => {
-        if (currentCheckpoint === null || checkpointsPaused) return;
+        if (checkpointId === undefined || checkpointsPaused) return;
 
         startTimeRef.current = performance.now();
         const timer = setTimeout(() => {
@@ -197,7 +216,7 @@ export const DiscordFeed: FC = () => {
             }
         };
     }, [
-        currentCheckpoint,
+        checkpointId,
         checkpointsPaused,
         gongSound,
         pauseCheckpoints,
@@ -231,7 +250,13 @@ export const DiscordFeed: FC = () => {
                     <div className="flex h-full flex-col-reverse overflow-hidden">
                         {messages
                             .filter(
-                                (message) => message.content.html.length > 0,
+                                (message) =>
+                                    message.content.html.length > 0 ||
+                                    message.embeds.length > 0 ||
+                                    message.attachments.some(
+                                        (url) =>
+                                            isPhotoUrl(url) || isVideoUrl(url),
+                                    ),
                             )
                             .map((message) => (
                                 <DiscordMessage
@@ -338,6 +363,7 @@ const DiscordMessage: FC<{ message: DiscordMessage }> = ({ message }) => {
                     })}
                 </div>
             )}
+            <DiscordEmbeds embeds={message.embeds} />
         </motion.div>
     );
 };
@@ -356,6 +382,7 @@ const CheckpointOverlayContent: FC<{ message: DiscordMessage }> = ({
     const hasText = message.content.html.length > 0;
     const visibleAttachments = message.attachments.slice(0, 3);
     const hasAttachments = visibleAttachments.length > 0;
+    const hasEmbeds = message.embeds.length > 0;
 
     const time = message.timestamp.toLocaleTimeString(undefined, {
         hour: "numeric",
@@ -396,7 +423,7 @@ const CheckpointOverlayContent: FC<{ message: DiscordMessage }> = ({
                     <div
                         className={cn(
                             "discord-text font-polysans text-3xl leading-snug",
-                            hasAttachments && "line-clamp-5",
+                            (hasAttachments || hasEmbeds) && "line-clamp-5",
                         )}
                         dangerouslySetInnerHTML={{
                             __html: message.content.html,
@@ -431,8 +458,10 @@ const CheckpointOverlayContent: FC<{ message: DiscordMessage }> = ({
                     </div>
                 )}
 
+                <DiscordEmbeds embeds={message.embeds} featured />
+
                 {/* Empty div for flexbox justification */}
-                {(!hasAttachments || !hasText) && <div></div>}
+                {!hasEmbeds && (!hasAttachments || !hasText) && <div></div>}
 
                 {/* Lightning clock */}
                 <LightningClock
